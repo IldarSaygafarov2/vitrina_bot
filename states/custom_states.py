@@ -2,7 +2,9 @@ from telebot.handler_backends import State, StatesGroup
 
 
 class AdState(StatesGroup):
-    photo = State()
+    start_process = State()
+    pre_process_photo = State()
+    post_process_photo = State()
     title = State()
     description = State()
     district = State()
