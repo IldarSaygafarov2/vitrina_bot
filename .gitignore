@@ -98,3 +98,4 @@ venv*
 
 venv/
 media/
+*.db
