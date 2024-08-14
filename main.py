@@ -12,6 +12,7 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder, KeyboardButton, ReplyKe
 
 import settings
 from custom_states import AdvertisementState
+import api
 
 dp = Dispatcher()
 
@@ -24,26 +25,11 @@ def start_kb():
     return reply_builder.as_markup()
 
 
-districts_list = [
-    'Алмазарский район',
-    'Бектемирский район',
-    'Мирабадский район',
-    'Мирзо-Улугбекский район',
-    'Сергелийский район',
-    'Учтепинский район',
-    'Чиланзарский район',
-    'Шайхантахурский район',
-    'Юнусабадский район',
-    'Яккасарайский район',
-    'Яшнабадский район'
-]
-
-
 def districts_kb():
     reply_builder = ReplyKeyboardMarkup(
         resize_keyboard=True,
         keyboard=[
-            [KeyboardButton(text=district)] for district in districts_list
+            [KeyboardButton(text=district)] for district in settings.districts_list
         ])
     return reply_builder
 
@@ -66,7 +52,7 @@ def repair_type_kb():
     return reply_builder.as_markup()
 
 
-@dp.message(CommandStart())
+@dp.message(CommandStart(), F.chat.func(lambda chat: api.is_user_realtor(chat.username)))
 async def start(message: Message):
     # db.create_user(chat_id=message.chat.id)
     await message.answer(f'Hello, {html.bold(message.from_user.full_name)}', reply_markup=start_kb())
@@ -197,7 +183,6 @@ async def process_repair(message: Message, state: FSMContext):
     media = [InputMediaPhoto(media=i) for i in data['photos']]
     await message.answer_media_group(media=media)
     await message.answer(msg)
-
 
 
 async def main():
