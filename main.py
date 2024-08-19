@@ -10,9 +10,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove, InputMediaPhoto
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, KeyboardButton, ReplyKeyboardMarkup
 
+import api
 import settings
 from custom_states import AdvertisementState
-import api
 
 dp = Dispatcher()
 
@@ -25,9 +25,21 @@ def start_kb():
     return reply_builder.as_markup()
 
 
+def main_categories_kb():
+    markup = ReplyKeyboardMarkup(
+        resize_keyboard=True,
+        one_time_keyboard=True,
+        keyboard=[
+            [KeyboardButton(text='Аренда'), KeyboardButton(text='Покупка')]
+        ]
+    )
+    return markup
+
+
 def districts_kb():
     reply_builder = ReplyKeyboardMarkup(
         resize_keyboard=True,
+        one_time_keyboard=True,
         keyboard=[
             [KeyboardButton(text=district)] for district in settings.districts_list
         ])
@@ -54,12 +66,18 @@ def repair_type_kb():
 
 @dp.message(CommandStart(), F.chat.func(lambda chat: api.is_user_realtor(chat.username)))
 async def start(message: Message):
-    # db.create_user(chat_id=message.chat.id)
     await message.answer(f'Hello, {html.bold(message.from_user.full_name)}', reply_markup=start_kb())
 
 
 @dp.message(F.text.lower() == 'создать объявление')
 async def start_creating_ad(message: Message, state: FSMContext):
+    await state.set_state(AdvertisementState.main_categories)
+    await message.answer(f'Выберите один из пунктов ниже', reply_markup=main_categories_kb())
+
+
+@dp.message(AdvertisementState.main_categories)
+async def process_main_categories(message: Message, state: FSMContext):
+    await state.update_data(main_categories=message.text)
     await state.set_state(AdvertisementState.photos_number)
     await message.answer(f'Сколько фотографий добавите для этого объявления?',
                          reply_markup=ReplyKeyboardRemove())
@@ -67,7 +85,6 @@ async def start_creating_ad(message: Message, state: FSMContext):
 
 @dp.message(AdvertisementState.photos_number)
 async def process_photos_qty(message: Message, state: FSMContext):
-    chat_id = message.chat.id
     await state.update_data(photo_numbers=int(message.text), photos=[])
 
     await state.set_state(AdvertisementState.photos)
@@ -166,19 +183,21 @@ async def process_repair(message: Message, state: FSMContext):
     data = await state.get_data()
     msg = f'''
 {html.bold('Заголовок: ')}
-{data['title']}
+{html.italic(data['title'])}
+{html.bold('Тип объявления: ')}
+{html.italic(data['main_categories'])}
 {html.bold('Описание: ')}
-{data['full_description']}
-{html.bold('Район: ')} {data['district']}
-{html.bold('Тип недвижимости: ')}{data['property_type']}
-{html.bold('Цена: ')}{data['price']}
-{html.bold('Кол-во комнат от: ')}{data['rooms_from']}
-{html.bold('Кол-во комнат до: ')}{data['rooms_to']}
-{html.bold('Квадратура от: ')}{data['quadrature_from']}
-{html.bold('Квадратура до: ')}{data['quadrature_to']}
-{html.bold('Этаж от: ')}{data['floor_from']}
-{html.bold('Этаж до: ')}{data['floor_to']}
-{html.bold('Ремонт: ')}{message.text}
+{html.italic(data['full_description'])}
+{html.bold('Район: ')}{html.italic(data['district'])}
+{html.bold('Тип недвижимости: ')}{html.italic(data['property_type'])}
+{html.bold('Цена: ')}{html.italic(data['price'])}
+{html.bold('Кол-во комнат от: ')}{html.italic(data['rooms_from'])}
+{html.bold('Кол-во комнат до: ')}{html.italic(data['rooms_to'])}
+{html.bold('Квадратура от: ')}{html.italic(data['quadrature_from'])}
+{html.bold('Квадратура до: ')}{html.italic(data['quadrature_to'])}
+{html.bold('Этаж от: ')}{html.italic(data['floor_from'])}
+{html.bold('Этаж до: ')}{html.italic(data['floor_to'])}
+{html.bold('Ремонт: ')}{html.italic(message.text)}
 '''
     media = [InputMediaPhoto(media=i) for i in data['photos']]
     await message.answer_media_group(media=media)
