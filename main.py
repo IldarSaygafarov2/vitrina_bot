@@ -8,75 +8,35 @@ from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove, InputMediaPhoto
-from aiogram.utils.keyboard import ReplyKeyboardBuilder, KeyboardButton, ReplyKeyboardMarkup
 
 import api
 import settings
 from custom_states import AdvertisementState
+from keyboards import reply as kb
 
 dp = Dispatcher()
 
 
-def start_kb():
-    reply_builder = ReplyKeyboardBuilder()
-    reply_builder.add(
-        KeyboardButton(text='Создать объявление')
-    )
-    return reply_builder.as_markup()
-
-
-def main_categories_kb():
-    markup = ReplyKeyboardMarkup(
-        resize_keyboard=True,
-        one_time_keyboard=True,
-        keyboard=[
-            [KeyboardButton(text='Аренда'), KeyboardButton(text='Покупка')]
-        ]
-    )
-    return markup
-
-
-def districts_kb():
-    reply_builder = ReplyKeyboardMarkup(
-        resize_keyboard=True,
-        one_time_keyboard=True,
-        keyboard=[
-            [KeyboardButton(text=district)] for district in settings.districts_list
-        ])
-    return reply_builder
-
-
-def property_type_kb():
-    reply_builder = ReplyKeyboardBuilder()
-    reply_builder.add(
-        KeyboardButton(text='Новостройка'),
-        KeyboardButton(text='Вторичный фонд')
-    )
-    return reply_builder.as_markup()
-
-
-def repair_type_kb():
-    reply_builder = ReplyKeyboardBuilder()
-    reply_builder.add(
-        KeyboardButton(text='С ремонтом'),
-        KeyboardButton(text='Коробка без ремонта')
-    )
-    return reply_builder.as_markup()
-
-
 @dp.message(CommandStart(), F.chat.func(lambda chat: api.is_user_realtor(chat.username)))
 async def start(message: Message):
-    await message.answer(f'Hello, {html.bold(message.from_user.full_name)}', reply_markup=start_kb())
+    await message.answer(f'Hello, {html.bold(message.from_user.full_name)}', reply_markup=kb.start_kb())
 
 
 @dp.message(F.text.lower() == 'создать объявление')
 async def start_creating_ad(message: Message, state: FSMContext):
     await state.set_state(AdvertisementState.main_categories)
-    await message.answer(f'Выберите один из пунктов ниже', reply_markup=main_categories_kb())
+    await message.answer(f'Выберите один из пунктов ниже', reply_markup=kb.main_categories_kb())
 
 
 @dp.message(AdvertisementState.main_categories)
 async def process_main_categories(message: Message, state: FSMContext):
+    await state.update_data(main_categories=message.text)
+    await state.set_state(AdvertisementState.property_categories)
+    await message.answer(f'Выберите категорию для недвижимости', reply_markup=kb.property_categories_kb())
+
+
+@dp.message(AdvertisementState.property_categories)
+async def process_photos_qty(message: Message, state: FSMContext):
     await state.update_data(main_categories=message.text)
     await state.set_state(AdvertisementState.photos_number)
     await message.answer(f'Сколько фотографий добавите для этого объявления?',
@@ -112,14 +72,14 @@ async def process_title(message: Message, state: FSMContext):
 async def process_description(message: Message, state: FSMContext):
     await state.update_data(full_description=message.text)
     await state.set_state(AdvertisementState.district)
-    await message.answer('Выберите район, в котором расположена данная недвижимость', reply_markup=districts_kb())
+    await message.answer('Выберите район, в котором расположена данная недвижимость', reply_markup=kb.districts_kb())
 
 
 @dp.message(AdvertisementState.district)
 async def process_district(message: Message, state: FSMContext):
     await state.update_data(district=message.text)
     await state.set_state(AdvertisementState.property_type)
-    await message.answer('Выберите тип недвижимости', reply_markup=property_type_kb())
+    await message.answer('Выберите тип недвижимости', reply_markup=kb.property_type_kb())
 
 
 @dp.message(AdvertisementState.property_type)
@@ -175,7 +135,7 @@ async def process_floor(message: Message, state: FSMContext):
 async def process_floor(message: Message, state: FSMContext):
     await state.update_data(floor_to=message.text)
     await state.set_state(AdvertisementState.repair_type)
-    await message.answer('Укажите тип ремонта', reply_markup=repair_type_kb())
+    await message.answer('Укажите тип ремонта', reply_markup=kb.repair_type_kb())
 
 
 @dp.message(AdvertisementState.repair_type)

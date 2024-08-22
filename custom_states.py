@@ -3,7 +3,7 @@ from aiogram.fsm.state import State, StatesGroup
 
 class AdvertisementState(StatesGroup):
     main_categories = State()
-    categories = State()
+    property_categories = State()
     photos = State()
     photos_number = State()
     title = State()
