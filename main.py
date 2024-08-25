@@ -7,19 +7,19 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, ReplyKeyboardRemove, InputMediaPhoto, CallbackQuery
+from aiogram.types import Message, ReplyKeyboardRemove, InputMediaPhoto, CallbackQuery, InputFile
 
-from api import ApiService
 import settings
+from api import APIManager
 from custom_states import AdvertisementState
-from keyboards import reply as kb
 from keyboards import callback as callback_kb
+from keyboards import reply as kb
 
 dp = Dispatcher()
 
 # F.chat.func(lambda chat: api.is_user_realtor(chat.username))
 
-api_service = ApiService()
+api_manager = APIManager()
 
 
 @dp.message(CommandStart())
@@ -35,17 +35,25 @@ async def start_creating_ad(message: Message, state: FSMContext):
 
 @dp.message(AdvertisementState.main_categories)
 async def process_main_categories(message: Message, state: FSMContext):
+    categories = api_manager.category_service.get_categories()
+
     await state.update_data(main_categories=message.text)
     await state.set_state(AdvertisementState.property_categories)
-    await message.answer(f'Выберите категорию для недвижимости', reply_markup=kb.property_categories_kb())
+    await message.answer(f'Выберите категорию для недвижимости',
+                         reply_markup=callback_kb.categories_kb(categories))
 
 
+@dp.callback_query(F.data.contains('category'))
 @dp.message(AdvertisementState.property_categories)
-async def process_photos_qty(message: Message, state: FSMContext):
-    await state.update_data(main_categories=message.text)
+async def process_photos_qty(callback: CallbackQuery, state: FSMContext):
+    _, category_slug = callback.data.split('_')
+    category = api_manager.category_service.get_category(category_slug)
+
+    await state.update_data(main_categories=category)
     await state.set_state(AdvertisementState.photos_number)
-    await message.answer(f'Сколько фотографий добавите для этого объявления?',
-                         reply_markup=ReplyKeyboardRemove())
+    await callback.message.answer(f'Выбранная категория: {category["name"]}')
+    await callback.message.answer(f'Сколько фотографий добавите для этого объявления?',
+                                  reply_markup=ReplyKeyboardRemove())
 
 
 @dp.message(AdvertisementState.photos_number)
@@ -75,9 +83,10 @@ async def process_title(message: Message, state: FSMContext):
 
 @dp.message(AdvertisementState.full_description)
 async def process_description(message: Message, state: FSMContext):
+    districts = api_manager.district_service.get_districts()
+    print(districts)
     await state.update_data(full_description=message.text)
     await state.set_state(AdvertisementState.district)
-    districts = ApiService().get_districts()
     await message.answer('Выберите район, в котором расположена данная недвижимость',
                          reply_markup=callback_kb.districts_kb(districts))
 
@@ -86,11 +95,12 @@ async def process_description(message: Message, state: FSMContext):
 # async def any_callback(callback_query: CallbackQuery):
 #     print(callback_query.data)
 
-@dp.callback_query()
+@dp.callback_query(F.data.contains('district'))
 @dp.message(AdvertisementState.district)
 async def process_district(callback: CallbackQuery, state: FSMContext):
     _, district_slug = callback.data.split('_')
-    district = api_service.get_district_id(district_slug)
+    print(district_slug)
+    district = api_manager.district_service.get_district(district_slug)
     await state.update_data(district=district)
     await state.set_state(AdvertisementState.property_type)
     await callback.message.answer('Выберите тип недвижимости', reply_markup=kb.property_type_kb())
@@ -159,6 +169,7 @@ async def process_repair(message: Message, state: FSMContext):
     main_category = data.get('main_categories')
     description = data.get('full_description')
     district = data.get('district')
+    print(district)
     property_type = data.get('property_type')
     price = data.get('price')
     rooms_from = data.get('rooms_from')
@@ -168,12 +179,14 @@ async def process_repair(message: Message, state: FSMContext):
     floor_from = data.get('floor_from')
     floor_to = data.get('floor_to')
     repair_type = message.text
+    media = [InputMediaPhoto(media=i) for i in data['photos']]
 
-    api_service.create_advertisement(
+    api_manager.advertiser_service.create_advertisement(
         data={
             "name": title,
             "description": description,
             "district": district['id'],
+            "property_type": property_type,
             "price": price,
             "rooms_qty_from": rooms_from,
             "rooms_qty_to": rooms_to,
@@ -182,7 +195,7 @@ async def process_repair(message: Message, state: FSMContext):
             "floor_from": floor_from,
             "floor_to": floor_to,
             "auction_allowed": False,
-            # "category": main_category,
+            "category": main_category['id'],
             "gallery": []
         }
     )
@@ -191,7 +204,7 @@ async def process_repair(message: Message, state: FSMContext):
 {html.bold('Заголовок: ')}
 {html.italic(title)}
 {html.bold('Тип объявления: ')}
-{html.italic(main_category)}
+{html.italic(main_category["name"])}
 {html.bold('Описание: ')}
 {html.italic(description)}
 {html.bold('Район: ')}{html.italic(district['name'])}
@@ -206,7 +219,7 @@ async def process_repair(message: Message, state: FSMContext):
 {html.bold('Ремонт: ')}{html.italic(repair_type)}
 '''
 
-    media = [InputMediaPhoto(media=i) for i in data['photos']]
+
     await message.answer_media_group(media=media)
     await message.answer(msg)
 

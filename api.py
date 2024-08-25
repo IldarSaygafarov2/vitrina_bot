@@ -26,22 +26,39 @@ class ApiService:
         return response.json()
 
     def post(self, url: str, data: dict):
-        response = requests.post(url, json=data)
-        response.raise_for_status()
+        response = requests.post(url, data=data)
+        print(response.text)
         return response.json()
 
-    def create_advertisement(self, data: dict) -> dict:
-        endpoint = settings.API_URL + '/advertisements/'
-        return self.post(endpoint, data)
 
+class CategoryAPIService(ApiService):
+    def get_categories(self) -> list:
+        return self.get(settings.API_URL + '/categories/')
+
+    def get_category(self, category_slug: str) -> dict:
+        return self.get(settings.API_URL + '/categories/' + category_slug)
+
+
+class DistrictAPIService(ApiService):
     def get_districts(self):
         return self.get(settings.API_URL + '/districts/')
 
-    def get_district_id(self, district_slug: str) -> int:
+    def get_district(self, district_slug: str) -> int:
         return self.get(settings.API_URL + '/districts/' + district_slug)
 
-    def get_categories(self):
-        return self.get(settings.API_URL + '/categories/')
+
+class AdvertisementAPIService(ApiService):
+    def create_advertisement(self, data):
+        return self.post(settings.API_URL + '/advertisements/', data=data)
+
+
+class APIManager(ApiService):
+    def __init__(self):
+        self.category_service: CategoryAPIService = CategoryAPIService()
+        self.district_service: DistrictAPIService = DistrictAPIService()
+        self.advertiser_service: AdvertisementAPIService = AdvertisementAPIService()
+
+
 
 
 """
