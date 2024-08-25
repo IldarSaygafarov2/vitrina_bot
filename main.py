@@ -7,17 +7,22 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, ReplyKeyboardRemove, InputMediaPhoto
+from aiogram.types import Message, ReplyKeyboardRemove, InputMediaPhoto, CallbackQuery
 
-import api
+from api import ApiService
 import settings
 from custom_states import AdvertisementState
 from keyboards import reply as kb
+from keyboards import callback as callback_kb
 
 dp = Dispatcher()
 
+# F.chat.func(lambda chat: api.is_user_realtor(chat.username))
 
-@dp.message(CommandStart(), F.chat.func(lambda chat: api.is_user_realtor(chat.username)))
+api_service = ApiService()
+
+
+@dp.message(CommandStart())
 async def start(message: Message):
     await message.answer(f'Hello, {html.bold(message.from_user.full_name)}', reply_markup=kb.start_kb())
 
@@ -72,14 +77,23 @@ async def process_title(message: Message, state: FSMContext):
 async def process_description(message: Message, state: FSMContext):
     await state.update_data(full_description=message.text)
     await state.set_state(AdvertisementState.district)
-    await message.answer('Выберите район, в котором расположена данная недвижимость', reply_markup=kb.districts_kb())
+    districts = ApiService().get_districts()
+    await message.answer('Выберите район, в котором расположена данная недвижимость',
+                         reply_markup=callback_kb.districts_kb(districts))
 
 
+# @dp.callback_query()
+# async def any_callback(callback_query: CallbackQuery):
+#     print(callback_query.data)
+
+@dp.callback_query()
 @dp.message(AdvertisementState.district)
-async def process_district(message: Message, state: FSMContext):
-    await state.update_data(district=message.text)
+async def process_district(callback: CallbackQuery, state: FSMContext):
+    _, district_slug = callback.data.split('_')
+    district = api_service.get_district_id(district_slug)
+    await state.update_data(district=district)
     await state.set_state(AdvertisementState.property_type)
-    await message.answer('Выберите тип недвижимости', reply_markup=kb.property_type_kb())
+    await callback.message.answer('Выберите тип недвижимости', reply_markup=kb.property_type_kb())
 
 
 @dp.message(AdvertisementState.property_type)
@@ -141,24 +155,57 @@ async def process_floor(message: Message, state: FSMContext):
 @dp.message(AdvertisementState.repair_type)
 async def process_repair(message: Message, state: FSMContext):
     data = await state.get_data()
+    title = data.get('title')
+    main_category = data.get('main_categories')
+    description = data.get('full_description')
+    district = data.get('district')
+    property_type = data.get('property_type')
+    price = data.get('price')
+    rooms_from = data.get('rooms_from')
+    rooms_to = data.get('rooms_to')
+    quadrature_from = data.get('quadrature_from')
+    quadrature_to = data.get('quadrature_to')
+    floor_from = data.get('floor_from')
+    floor_to = data.get('floor_to')
+    repair_type = message.text
+
+    api_service.create_advertisement(
+        data={
+            "name": title,
+            "description": description,
+            "district": district['id'],
+            "price": price,
+            "rooms_qty_from": rooms_from,
+            "rooms_qty_to": rooms_to,
+            "quadrature_from": quadrature_from,
+            "quadrature_to": quadrature_to,
+            "floor_from": floor_from,
+            "floor_to": floor_to,
+            "auction_allowed": False,
+            # "category": main_category,
+            "gallery": []
+        }
+    )
+
     msg = f'''
 {html.bold('Заголовок: ')}
-{html.italic(data['title'])}
+{html.italic(title)}
 {html.bold('Тип объявления: ')}
-{html.italic(data['main_categories'])}
+{html.italic(main_category)}
 {html.bold('Описание: ')}
-{html.italic(data['full_description'])}
-{html.bold('Район: ')}{html.italic(data['district'])}
-{html.bold('Тип недвижимости: ')}{html.italic(data['property_type'])}
-{html.bold('Цена: ')}{html.italic(data['price'])}
-{html.bold('Кол-во комнат от: ')}{html.italic(data['rooms_from'])}
-{html.bold('Кол-во комнат до: ')}{html.italic(data['rooms_to'])}
-{html.bold('Квадратура от: ')}{html.italic(data['quadrature_from'])}
-{html.bold('Квадратура до: ')}{html.italic(data['quadrature_to'])}
-{html.bold('Этаж от: ')}{html.italic(data['floor_from'])}
-{html.bold('Этаж до: ')}{html.italic(data['floor_to'])}
-{html.bold('Ремонт: ')}{html.italic(message.text)}
+{html.italic(description)}
+{html.bold('Район: ')}{html.italic(district['name'])}
+{html.bold('Тип недвижимости: ')}{html.italic(property_type)}
+{html.bold('Цена: ')}{html.italic(price)}
+{html.bold('Кол-во комнат от: ')}{html.italic(rooms_from)}
+{html.bold('Кол-во комнат до: ')}{html.italic(rooms_to)}
+{html.bold('Квадратура от: ')}{html.italic(quadrature_from)}
+{html.bold('Квадратура до: ')}{html.italic(quadrature_to)}
+{html.bold('Этаж от: ')}{html.italic(floor_from)}
+{html.bold('Этаж до: ')}{html.italic(floor_to)}
+{html.bold('Ремонт: ')}{html.italic(repair_type)}
 '''
+
     media = [InputMediaPhoto(media=i) for i in data['photos']]
     await message.answer_media_group(media=media)
     await message.answer(msg)
