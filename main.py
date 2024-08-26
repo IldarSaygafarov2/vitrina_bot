@@ -14,8 +14,9 @@ from api import APIManager
 from custom_states import AdvertisementState
 from keyboards import callback as callback_kb
 from keyboards import reply as kb
+import io
 
-# bot = Bot(token=settings.BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+bot = Bot(token=settings.BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 
 # F.chat.func(lambda chat: api.is_user_realtor(chat.username))
@@ -174,6 +175,8 @@ async def process_repair(message: Message, state: FSMContext):
     floor_to = data.get('floor_to')
     repair_type = message.text
 
+    io_obj = io.BytesIO()
+
     msg = f'''
 {html.bold('Заголовок: ')}
 {html.italic(title)}
@@ -189,9 +192,15 @@ async def process_repair(message: Message, state: FSMContext):
 {html.bold('Этаж: ')}от {html.italic(floor_from)} до {html.italic(floor_to)}
 {html.bold('Ремонт: ')}{html.italic(repair_type)}
 '''
-    media = [InputMediaPhoto(media=img, caption=msg) if i == 0 else InputMediaPhoto(media=img, caption=msg)
-             for i, img in enumerate(data['photos'])]
+    media: list[InputMediaPhoto] = [
+        InputMediaPhoto(media=img, caption=msg) if i == 0 else InputMediaPhoto(media=img, caption=msg)
+        for i, img in enumerate(data['photos'])
+    ]
 
+    # files = [await bot.get_file(file) for file in data['photos']]
+    # # files = [file.file_path for file in files]
+    # # files = [await bot.download_file(file, io_obj) for file in files]
+    # print(files)
     api_manager.advertiser_service.create_advertisement(
         data={
             "name": title,
@@ -208,15 +217,13 @@ async def process_repair(message: Message, state: FSMContext):
             "auction_allowed": False,
             "category": main_category['id'],
             "gallery": []
-        }
+        },
     )
 
     await message.answer_media_group(media=media)
 
 
 async def main():
-    bot = Bot(token=settings.BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-
     await dp.start_polling(bot)
 
 
