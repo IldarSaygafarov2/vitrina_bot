@@ -7,7 +7,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, ReplyKeyboardRemove, InputMediaPhoto, CallbackQuery, InputFile
+from aiogram.types import Message, ReplyKeyboardRemove, InputMediaPhoto, CallbackQuery, InputFile, ReplyParameters
 
 import settings
 from api import APIManager
@@ -15,6 +15,7 @@ from custom_states import AdvertisementState
 from keyboards import callback as callback_kb
 from keyboards import reply as kb
 
+# bot = Bot(token=settings.BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 
 # F.chat.func(lambda chat: api.is_user_realtor(chat.username))
@@ -84,22 +85,16 @@ async def process_title(message: Message, state: FSMContext):
 @dp.message(AdvertisementState.full_description)
 async def process_description(message: Message, state: FSMContext):
     districts = api_manager.district_service.get_districts()
-    print(districts)
     await state.update_data(full_description=message.text)
     await state.set_state(AdvertisementState.district)
     await message.answer('Выберите район, в котором расположена данная недвижимость',
                          reply_markup=callback_kb.districts_kb(districts))
 
 
-# @dp.callback_query()
-# async def any_callback(callback_query: CallbackQuery):
-#     print(callback_query.data)
-
 @dp.callback_query(F.data.contains('district'))
 @dp.message(AdvertisementState.district)
 async def process_district(callback: CallbackQuery, state: FSMContext):
     _, district_slug = callback.data.split('_')
-    print(district_slug)
     district = api_manager.district_service.get_district(district_slug)
     await state.update_data(district=district)
     await state.set_state(AdvertisementState.property_type)
@@ -169,7 +164,6 @@ async def process_repair(message: Message, state: FSMContext):
     main_category = data.get('main_categories')
     description = data.get('full_description')
     district = data.get('district')
-    print(district)
     property_type = data.get('property_type')
     price = data.get('price')
     rooms_from = data.get('rooms_from')
@@ -179,7 +173,24 @@ async def process_repair(message: Message, state: FSMContext):
     floor_from = data.get('floor_from')
     floor_to = data.get('floor_to')
     repair_type = message.text
-    media = [InputMediaPhoto(media=i) for i in data['photos']]
+
+    msg = f'''
+{html.bold('Заголовок: ')}
+{html.italic(title)}
+{html.bold('Тип объявления: ')}
+{html.italic(main_category["name"])}
+{html.bold('Описание: ')}
+{html.italic(description)}
+{html.bold('Район: ')}{html.italic(district['name'])}
+{html.bold('Тип недвижимости: ')}{html.italic(property_type)}
+{html.bold('Цена: ')}{html.italic(price)}
+{html.bold('Кол-во комнат: ')}от {html.italic(rooms_from)} до {html.italic(rooms_to)}
+{html.bold('Квадратура: ')}от {html.italic(quadrature_from)} до {html.italic(quadrature_to)}
+{html.bold('Этаж: ')}от {html.italic(floor_from)} до {html.italic(floor_to)}
+{html.bold('Ремонт: ')}{html.italic(repair_type)}
+'''
+    media = [InputMediaPhoto(media=img, caption=msg) if i == 0 else InputMediaPhoto(media=img, caption=msg)
+             for i, img in enumerate(data['photos'])]
 
     api_manager.advertiser_service.create_advertisement(
         data={
@@ -200,28 +211,7 @@ async def process_repair(message: Message, state: FSMContext):
         }
     )
 
-    msg = f'''
-{html.bold('Заголовок: ')}
-{html.italic(title)}
-{html.bold('Тип объявления: ')}
-{html.italic(main_category["name"])}
-{html.bold('Описание: ')}
-{html.italic(description)}
-{html.bold('Район: ')}{html.italic(district['name'])}
-{html.bold('Тип недвижимости: ')}{html.italic(property_type)}
-{html.bold('Цена: ')}{html.italic(price)}
-{html.bold('Кол-во комнат от: ')}{html.italic(rooms_from)}
-{html.bold('Кол-во комнат до: ')}{html.italic(rooms_to)}
-{html.bold('Квадратура от: ')}{html.italic(quadrature_from)}
-{html.bold('Квадратура до: ')}{html.italic(quadrature_to)}
-{html.bold('Этаж от: ')}{html.italic(floor_from)}
-{html.bold('Этаж до: ')}{html.italic(floor_to)}
-{html.bold('Ремонт: ')}{html.italic(repair_type)}
-'''
-
-
     await message.answer_media_group(media=media)
-    await message.answer(msg)
 
 
 async def main():

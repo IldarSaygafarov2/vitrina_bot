@@ -14,11 +14,6 @@ def is_user_realtor(tg_username: str) -> bool:
     return data['user_type'] == 'realtor'
 
 
-def get_categories() -> dict:
-    endpoint = settings.API_URL + '/categories/'
-    return make_request(endpoint)
-
-
 class ApiService:
     def get(self, url: str):
         response = requests.get(url)
@@ -57,8 +52,6 @@ class APIManager(ApiService):
         self.category_service: CategoryAPIService = CategoryAPIService()
         self.district_service: DistrictAPIService = DistrictAPIService()
         self.advertiser_service: AdvertisementAPIService = AdvertisementAPIService()
-
-
 
 
 """
