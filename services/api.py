@@ -20,8 +20,8 @@ class ApiService:
         response.raise_for_status()
         return response.json()
 
-    def post(self, url: str, data: dict, **kwargs):
-        response = requests.post(url, data=data, **kwargs)
+    def post(self, url: str, **kwargs):
+        response = requests.post(url, **kwargs)
         return response.json()
 
 
@@ -42,9 +42,9 @@ class DistrictAPIService(ApiService):
 
 
 class AdvertisementAPIService(ApiService):
-    def create_advertisement(self, data, **kwargs):
+    def create_advertisement(self, **kwargs):
 
-        return self.post(settings.API_URL + '/advertisements/', data=data, **kwargs)
+        return self.post(settings.API_URL + '/advertisements/', **kwargs)
 
 
 class APIManager(ApiService):
