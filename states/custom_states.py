@@ -11,6 +11,7 @@ class AdvertisementState(StatesGroup):
     district = State()
     property_type = State()
     price = State()
+    auction_allowed = State()
     rooms_from = State()
     rooms_to = State()
     quadrature_from = State()

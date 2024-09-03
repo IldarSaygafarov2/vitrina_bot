@@ -6,6 +6,7 @@ from aiogram.types import Message, ReplyKeyboardRemove, InputMediaPhoto, Callbac
 from keyboards import callback as callback_kb
 from keyboards import reply as kb
 from services.api import APIManager
+from services.utils import get_repair_type_by_name
 from states.custom_states import AdvertisementState
 
 router = Router()
@@ -14,7 +15,7 @@ api_manager = APIManager()
 
 @router.message(CommandStart())
 async def cmd_start(message: types.Message):
-    await message.answer(f'Привет, {html.bold(message.from_user.full_name)}')
+    await message.answer(f'Привет, {html.bold(message.from_user.full_name)}', reply_markup=kb.start_kb())
 
 
 @router.message(F.text.lower() == 'создать объявление')
@@ -98,15 +99,22 @@ async def process_property(message: Message, state: FSMContext):
 @router.message(AdvertisementState.price)
 async def process_price(message: Message, state: FSMContext):
     await state.update_data(price=message.text)
-    await state.set_state(AdvertisementState.rooms_from)
-    await message.answer('Количество комнат от')
+    await state.set_state(AdvertisementState.auction_allowed)
+    await message.answer('Уместен ли торг?', reply_markup=kb.is_auction_allowed_kb())
 
+
+@router.message(AdvertisementState.auction_allowed)
+async def process_auction_allowed(message: Message, state: FSMContext):
+    is_allowed = True if message.text == 'Да' else False
+    await state.update_data(auction_allowed=is_allowed)
+    await state.set_state(AdvertisementState.rooms_from)
+    await message.answer('Количество комнат от: ')
 
 @router.message(AdvertisementState.rooms_from)
 async def process_rooms(message: Message, state: FSMContext):
     await state.update_data(rooms_from=message.text)
     await state.set_state(AdvertisementState.rooms_to)
-    await message.answer('Количество комнат до')
+    await message.answer('Количество комнат до: ')
 
 
 @router.message(AdvertisementState.rooms_to)
@@ -148,6 +156,7 @@ async def process_floor(message: Message, state: FSMContext):
 async def process_repair(message: Message, state: FSMContext):
     data = await state.get_data()
     title = data.get('title')
+    is_allowed = data.get('auction_allowed')
     property_category = data.get('property_categories')
     main_category = data.get('main_categories')
     description = data.get('full_description')
@@ -183,7 +192,7 @@ async def process_repair(message: Message, state: FSMContext):
         for i, img in enumerate(data['photos'])
     ]
 
-    repair_type_choice = 'with' if repair_type == 'С ремонтом' else 'without'
+    repair_type_choice = get_repair_type_by_name(repair_type)
     property_type_choice = 'new' if property_type == 'Новостройка' else 'old'
 
     api_manager.advertiser_service.create_advertisement(
@@ -199,7 +208,7 @@ async def process_repair(message: Message, state: FSMContext):
             "quadrature_to": quadrature_to,
             "floor_from": floor_from,
             "floor_to": floor_to,
-            "auction_allowed": False,
+            "auction_allowed": is_allowed,
             "category": property_category['id'],
             'repair_type': repair_type_choice,
             "gallery": []

@@ -54,6 +54,8 @@ class APIManager(ApiService):
         self.advertiser_service: AdvertisementAPIService = AdvertisementAPIService()
 
 
+api_manager = APIManager()
+
 """
 {
     "name": "",

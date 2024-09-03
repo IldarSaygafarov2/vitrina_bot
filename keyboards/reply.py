@@ -1,5 +1,5 @@
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, KeyboardButton, ReplyKeyboardMarkup
-from api import ApiService
+from services.api import api_manager
 
 
 def start_kb():
@@ -22,7 +22,7 @@ def main_categories_kb():
 
 
 def districts_kb():
-    districts = ApiService().get_districts()
+    districts = api_manager.district_service.get_districts()
     reply_builder = ReplyKeyboardMarkup(
         resize_keyboard=True,
         one_time_keyboard=True,
@@ -41,6 +41,15 @@ def property_type_kb():
     return reply_builder.as_markup()
 
 
+"""
+        WITH = 'with', 'С ремонтом'
+        WITHOUT = 'without', 'Без ремонта'
+        DESIGNED = 'designed', 'Дизайнерский ремонт'
+        ROUGH = 'rough', 'Черновая'
+        PRE_FINISHED = 'pre_finished', 'Предчистовая'
+"""
+
+
 def repair_type_kb():
     markup = ReplyKeyboardMarkup(
         resize_keyboard=True,
@@ -49,19 +58,35 @@ def repair_type_kb():
             [
                 KeyboardButton(text='С ремонтом'),
                 KeyboardButton(text='Коробка без ремонта')
-             ]
+            ],
+            [
+                KeyboardButton(text='Дизайнерский ремонт'),
+                KeyboardButton(text='Черновая'),
+            ],
+            [KeyboardButton(text='Предчистовая')]
         ]
     )
     return markup
 
 
 def property_categories_kb():
-    categories = ApiService().get_categories()
+    categories = api_manager.category_service.get_categories()
     kb = ReplyKeyboardMarkup(
         resize_keyboard=True,
         one_time_keyboard=True,
         keyboard=[
             [KeyboardButton(text=category['name']) for category in categories]
+        ]
+    )
+    return kb
+
+
+def is_auction_allowed_kb():
+    kb = ReplyKeyboardMarkup(
+        resize_keyboard=True,
+        one_time_keyboard=True,
+        keyboard=[
+            [KeyboardButton(text='Да'), KeyboardButton(text='Нет')]
         ]
     )
     return kb
