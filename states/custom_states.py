@@ -19,3 +19,5 @@ class AdvertisementState(StatesGroup):
     floor_from = State()
     floor_to = State()
     repair_type = State()
+    is_studio = State()
+    creation_date = State()

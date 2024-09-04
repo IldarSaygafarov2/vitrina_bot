@@ -90,3 +90,17 @@ def is_auction_allowed_kb():
         ]
     )
     return kb
+
+
+def is_studio_kb():
+    kb = ReplyKeyboardMarkup(
+        resize_keyboard=True,
+        one_time_keyboard=True,
+        keyboard=[
+            [
+                KeyboardButton(text='Да'),
+                KeyboardButton(text='Нет')
+            ]
+        ]
+    )
+    return kb
