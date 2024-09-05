@@ -9,6 +9,7 @@ class AdvertisementState(StatesGroup):
     title = State()
     full_description = State()
     district = State()
+    address = State()
     property_type = State()
     price = State()
     auction_allowed = State()

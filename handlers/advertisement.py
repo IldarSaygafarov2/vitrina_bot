@@ -8,6 +8,7 @@ from keyboards import reply as kb
 from services.api import APIManager
 from services.utils import get_repair_type_by_name, get_property_type
 from states.custom_states import AdvertisementState
+from messages import create_advertisement_message
 
 router = Router()
 api_manager = APIManager()
@@ -85,8 +86,18 @@ async def process_district(callback: CallbackQuery, state: FSMContext):
     _, district_slug = callback.data.split('_')
     district = api_manager.district_service.get_district(district_slug)
     await state.update_data(district=district)
+    await state.set_state(AdvertisementState.address)
+    await callback.message.answer(f'Выбранный район: {district["name"]}')
+
+    await callback.message.answer('Напишите точный адрес недвижимости')
+
+
+
+@router.message(AdvertisementState.address)
+async def process_address(message: Message, state: FSMContext):
+    await state.update_data(address=message.text)
     await state.set_state(AdvertisementState.property_type)
-    await callback.message.answer('Выберите тип недвижимости: ', reply_markup=kb.property_type_kb())
+    await message.answer('Выберите тип недвижимости: ', reply_markup=kb.property_type_kb())
 
 
 @router.message(AdvertisementState.property_type)
@@ -184,6 +195,7 @@ async def process_repair(message: Message, state: FSMContext):
     floor_to = data.get('floor_to')
     repair_type = message.text
     is_studio = data.get('is_studio')
+    address = data.get('address')
 
     t = f'{html.bold('Кол-во комнат: ')}от {html.italic(rooms_from)} до {html.italic(rooms_to)}'
 
@@ -195,6 +207,7 @@ async def process_repair(message: Message, state: FSMContext):
 {html.bold('Описание: ')}
 {html.italic(description)}
 {html.bold('Район: ')}{html.italic(district['name'])}
+{html.bold('Адрес: ')}{html.italic(address)}
 {html.bold('Категория недвижимости: ')}{html.italic(property_category['name'])}
 {html.bold('Тип недвижимости: ')}{html.italic(property_type)}
 {html.bold('Цена: ')}{html.italic(price)}
@@ -216,6 +229,7 @@ async def process_repair(message: Message, state: FSMContext):
             "name": title,
             "description": description,
             "district": district['id'],
+            "address": address,
             "property_type": property_type_choice,
             "price": price,
             "rooms_qty_from": rooms_from,
