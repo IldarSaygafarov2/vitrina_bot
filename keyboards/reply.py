@@ -57,7 +57,7 @@ def repair_type_kb():
         keyboard=[
             [
                 KeyboardButton(text='С ремонтом'),
-                KeyboardButton(text='Коробка без ремонта')
+                KeyboardButton(text='Без ремонта')
             ],
             [
                 KeyboardButton(text='Дизайнерский ремонт'),

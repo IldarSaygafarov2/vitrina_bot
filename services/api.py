@@ -47,11 +47,17 @@ class AdvertisementAPIService(ApiService):
         return self.post(settings.API_URL + '/advertisements/', **kwargs)
 
 
+class UserAPIService(ApiService):
+    def get_user_id(self, tg_username: str) -> int:
+        return self.get(settings.API_URL + '/users/' + tg_username + '/user/')
+
+
 class APIManager(ApiService):
     def __init__(self):
         self.category_service: CategoryAPIService = CategoryAPIService()
         self.district_service: DistrictAPIService = DistrictAPIService()
         self.advertiser_service: AdvertisementAPIService = AdvertisementAPIService()
+        self.user_service: UserAPIService = UserAPIService()
 
 
 api_manager = APIManager()

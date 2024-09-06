@@ -5,13 +5,12 @@ from aiogram.types import Message, ReplyKeyboardRemove, InputMediaPhoto, Callbac
 
 from keyboards import callback as callback_kb
 from keyboards import reply as kb
-from services.api import APIManager
+from services.api import api_manager
 from services.utils import get_repair_type_by_name, get_property_type
 from states.custom_states import AdvertisementState
 from messages import create_advertisement_message
 
 router = Router()
-api_manager = APIManager()
 
 
 @router.message(CommandStart())
@@ -224,6 +223,9 @@ async def process_repair(message: Message, state: FSMContext):
     repair_type_choice = get_repair_type_by_name(repair_type)
     property_type_choice = get_property_type(property_type)
 
+    username = message.from_user.username
+    user_id = api_manager.user_service.get_user_id(username)
+
     api_manager.advertiser_service.create_advertisement(
         data={
             "name": title,
@@ -241,8 +243,8 @@ async def process_repair(message: Message, state: FSMContext):
             "auction_allowed": is_allowed,
             "category": property_category['id'],
             'repair_type': repair_type_choice,
-            'is_studio': '',
-
+            'is_studio': is_studio,
+            'user': user_id,
             "gallery": []
         },
     )
