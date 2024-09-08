@@ -43,13 +43,18 @@ class DistrictAPIService(ApiService):
 
 class AdvertisementAPIService(ApiService):
     def create_advertisement(self, **kwargs):
-
         return self.post(settings.API_URL + '/advertisements/', **kwargs)
+
+    def upload_image_to_gallery(self, advertisement_id, **kwargs):
+        endpoint = f'{settings.API_URL}/advertisements/{advertisement_id}/gallery/'
+        return self.post(endpoint, **kwargs)
 
 
 class UserAPIService(ApiService):
     def get_user_id(self, tg_username: str) -> int:
         return self.get(settings.API_URL + '/users/' + tg_username + '/user/')
+
+
 
 
 class APIManager(ApiService):

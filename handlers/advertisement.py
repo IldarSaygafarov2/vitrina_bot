@@ -1,14 +1,16 @@
+import os
+
 from aiogram import Router, types, html, F
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove, InputMediaPhoto, CallbackQuery
 
+from data.loader import bot
 from keyboards import callback as callback_kb
 from keyboards import reply as kb
 from services.api import api_manager
 from services.utils import get_repair_type_by_name, get_property_type
 from states.custom_states import AdvertisementState
-from messages import create_advertisement_message
 
 router = Router()
 
@@ -41,7 +43,7 @@ async def process_photos_qty(callback: CallbackQuery, state: FSMContext):
 
     await state.update_data(property_categories=category)
     await state.set_state(AdvertisementState.photos_number)
-    await callback.message.answer(f'Выбранная категория: {category["name"]}')
+    await callback.message.answer(f'Выбранная категория: {html.bold(category["name"])}')
     await callback.message.answer(f'Сколько фотографий добавите для этого объявления?',
                                   reply_markup=ReplyKeyboardRemove())
 
@@ -86,10 +88,8 @@ async def process_district(callback: CallbackQuery, state: FSMContext):
     district = api_manager.district_service.get_district(district_slug)
     await state.update_data(district=district)
     await state.set_state(AdvertisementState.address)
-    await callback.message.answer(f'Выбранный район: {district["name"]}')
-
+    await callback.message.answer(f'Выбранный район: {html.bold(district["name"])}')
     await callback.message.answer('Напишите точный адрес недвижимости')
-
 
 
 @router.message(AdvertisementState.address)
@@ -102,8 +102,20 @@ async def process_address(message: Message, state: FSMContext):
 @router.message(AdvertisementState.property_type)
 async def process_property(message: Message, state: FSMContext):
     await state.update_data(property_type=message.text)
+    if message.text == 'Новостройка':
+        await state.set_state(AdvertisementState.creation_date)
+        await message.answer('Укажите год постройки новостройки')
+    elif message.text == 'Вторичный фонд':
+        await state.set_state(AdvertisementState.price)
+        await state.update_data(creation_date=0)
+        await message.answer('Укажите цену недвижимости: ', reply_markup=ReplyKeyboardRemove())
+
+
+@router.message(AdvertisementState.creation_date)
+async def process_creation_date(message: Message, state: FSMContext):
+    await state.update_data(creation_date=message.text)
     await state.set_state(AdvertisementState.price)
-    await message.answer('Укажите цену недвижимости: ', reply_markup=ReplyKeyboardRemove())
+    await message.answer('Укажите цену недвижимости', reply_markup=ReplyKeyboardRemove())
 
 
 @router.message(AdvertisementState.price)
@@ -186,17 +198,33 @@ async def process_repair(message: Message, state: FSMContext):
     district = data.get('district')
     property_type = data.get('property_type')
     price = data.get('price')
-    rooms_from = data.get('rooms_from')
-    rooms_to = data.get('rooms_to')
+    rooms_from = data.get('rooms_from', 0)
+    rooms_to = data.get('rooms_to', 0)
     quadrature_from = data.get('quadrature_from')
     quadrature_to = data.get('quadrature_to')
     floor_from = data.get('floor_from')
     floor_to = data.get('floor_to')
     repair_type = message.text
     is_studio = data.get('is_studio')
+    creation_date = data.get('creation_date')
     address = data.get('address')
 
+    file_names = []
+
+    for photo in data['photos']:
+        file = await bot.get_file(photo)
+        file_path = file.file_path
+        file_names.append(file_path.split('/')[-1])
+        await bot.download_file(file_path, f'media/{file_path.split("/")[-1]}')
+
+    repair_type_choice = get_repair_type_by_name(repair_type)
+    property_type_choice = get_property_type(property_type)
+
+    username = message.from_user.username
+    user_id = api_manager.user_service.get_user_id(username)
+
     t = f'{html.bold('Кол-во комнат: ')}от {html.italic(rooms_from)} до {html.italic(rooms_to)}'
+    t2 = f'\n{html.bold("Год постройки: ")}{html.italic(creation_date)}' if creation_date else ''
 
     msg = f'''
 {html.bold('Заголовок: ')}
@@ -208,25 +236,20 @@ async def process_repair(message: Message, state: FSMContext):
 {html.bold('Район: ')}{html.italic(district['name'])}
 {html.bold('Адрес: ')}{html.italic(address)}
 {html.bold('Категория недвижимости: ')}{html.italic(property_category['name'])}
-{html.bold('Тип недвижимости: ')}{html.italic(property_type)}
+{html.bold('Тип недвижимости: ')}{html.italic(property_type)}{t2}
 {html.bold('Цена: ')}{html.italic(price)}
 {t if not is_studio else f'{html.bold("Кол-во комнат: ")} Студия'}
 {html.bold('Квадратура: ')}от {html.italic(quadrature_from)} до {html.italic(quadrature_to)}
 {html.bold('Этаж: ')}от {html.italic(floor_from)} до {html.italic(floor_to)}
 {html.bold('Ремонт: ')}{html.italic(repair_type)}
 '''
+
     media: list[InputMediaPhoto] = [
         InputMediaPhoto(media=img, caption=msg) if i == 0 else InputMediaPhoto(media=img, caption=msg)
         for i, img in enumerate(data['photos'])
     ]
 
-    repair_type_choice = get_repair_type_by_name(repair_type)
-    property_type_choice = get_property_type(property_type)
-
-    username = message.from_user.username
-    user_id = api_manager.user_service.get_user_id(username)
-
-    api_manager.advertiser_service.create_advertisement(
+    new = api_manager.advertiser_service.create_advertisement(
         data={
             "name": title,
             "description": description,
@@ -244,9 +267,19 @@ async def process_repair(message: Message, state: FSMContext):
             "category": property_category['id'],
             'repair_type': repair_type_choice,
             'is_studio': is_studio,
-            'user': user_id,
-            "gallery": []
+            'user': user_id['id'],
+            # "gallery": []
         },
     )
+    print(new)
+
+    media_files = os.listdir('media')
+    for media_file in media_files:
+        if media_file not in file_names:
+            continue
+
+        file = open(f'media/{media_file}', 'rb')
+        api_manager.advertiser_service.upload_image_to_gallery(advertisement_id=new['id'], files={'photo': file})
+        print('image uploaded')
 
     await message.answer_media_group(media=media)

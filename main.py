@@ -2,17 +2,11 @@ import asyncio
 import logging
 import sys
 
-from aiogram import Bot, Dispatcher
-from aiogram.client.default import DefaultBotProperties
-from aiogram.enums import ParseMode
-
-import settings
+from data.loader import bot, dp
 from handlers import advertisement
 
 
 async def main():
-    bot = Bot(token=settings.BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-    dp = Dispatcher()
     dp.include_routers(advertisement.router)
     await dp.start_polling(bot)
 
