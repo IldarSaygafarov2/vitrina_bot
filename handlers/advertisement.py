@@ -1,7 +1,7 @@
 import os
 
 from aiogram import Router, types, html, F
-from aiogram.filters import CommandStart
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove, InputMediaPhoto, CallbackQuery
 
@@ -9,13 +9,14 @@ from data.loader import bot
 from keyboards import callback as callback_kb
 from keyboards import reply as kb
 from services.api import api_manager
+from services.user import user_manager
 from services.utils import get_repair_type_by_name, get_property_type
 from states.custom_states import AdvertisementState
 
-router = Router()
+router = Router(name='advertisement')
 
 
-@router.message(CommandStart())
+@router.message(Command(commands=['start']), F.func(lambda msg: user_manager.is_user_realtor(msg.from_user.username)))
 async def cmd_start(message: types.Message):
     await message.answer(f'Привет, {html.bold(message.from_user.full_name)}', reply_markup=kb.start_kb())
 
@@ -279,7 +280,14 @@ async def process_repair(message: Message, state: FSMContext):
             continue
 
         file = open(f'media/{media_file}', 'rb')
-        api_manager.advertiser_service.upload_image_to_gallery(advertisement_id=new['id'], files={'photo': file})
+        media_data = {'photo': file}
+        data = {'advertisement': new['id']}
+        res = api_manager.advertiser_service.upload_image_to_gallery(
+            advertisement_id=new['id'],
+            files=media_data,
+            data=data
+        )
+        print(res)
         print('image uploaded')
 
     await message.answer_media_group(media=media)

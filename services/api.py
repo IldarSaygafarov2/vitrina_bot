@@ -2,21 +2,9 @@ import requests
 import settings
 
 
-def make_request(url: str) -> dict:
-    response = requests.get(url)
-    response.raise_for_status()
-    return response.json()
-
-
-def is_user_realtor(tg_username: str) -> bool:
-    endpoint = settings.API_URL + '/users/' + tg_username + '/type/'
-    data = make_request(endpoint)
-    return data['user_type'] == 'realtor'
-
-
 class ApiService:
-    def get(self, url: str):
-        response = requests.get(url)
+    def get(self, url: str, **kwargs):
+        response = requests.get(url, **kwargs)
         response.raise_for_status()
         return response.json()
 
@@ -49,12 +37,22 @@ class AdvertisementAPIService(ApiService):
         endpoint = f'{settings.API_URL}/advertisements/{advertisement_id}/gallery/'
         return self.post(endpoint, **kwargs)
 
+    def get_all(self, **kwargs):
+        endpoint = f'{settings.API_URL}/advertisements/'
+        return self.get(endpoint, **kwargs)
+
 
 class UserAPIService(ApiService):
     def get_user_id(self, tg_username: str) -> int:
         return self.get(settings.API_URL + '/users/' + tg_username + '/user/')
 
+    def get_user_type(self, tg_username: str) -> bool:
+        endpoint = f'{settings.API_URL}/users/{tg_username}/type'
+        return self.get(endpoint)
 
+    def get_all_users(self, **kwargs):
+        endpoint = f'{settings.API_URL}/users/list'
+        return self.get(endpoint, **kwargs)
 
 
 class APIManager(ApiService):

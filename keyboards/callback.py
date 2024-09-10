@@ -1,4 +1,5 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
 def districts_kb(districts: list) -> InlineKeyboardMarkup:
@@ -20,3 +21,16 @@ def categories_kb(categories: list) -> InlineKeyboardMarkup:
         ]
     )
     return kb
+
+
+def realtors_kb(realtors_list: list):
+    kb = InlineKeyboardBuilder()
+    for realtor in realtors_list:
+        kb.button(text=f'{realtor["first_name"]} {realtor["last_name"]}',
+                  callback_data=f'realtor_{realtor["tg_username"]}_{realtor["id"]}')
+
+    kb.adjust(2, 2)
+    return kb.as_markup()
+
+
+

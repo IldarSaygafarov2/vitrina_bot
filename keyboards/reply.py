@@ -104,3 +104,19 @@ def is_studio_kb():
         ]
     )
     return kb
+
+
+def rg_start_kb():
+    kb = ReplyKeyboardMarkup(
+        resize_keyboard=True,
+        one_time_keyboard=True,
+        keyboard=[
+            [
+                KeyboardButton(text='Список риелторов'),
+                KeyboardButton(text='Последние объявления')
+            ]
+        ]
+    )
+    return kb
+
+
