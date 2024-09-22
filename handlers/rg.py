@@ -1,4 +1,4 @@
-from aiogram import types, Router, F
+from aiogram import types, Router, F, html
 from aiogram.filters import CommandStart
 
 from keyboards import reply, callback
@@ -25,4 +25,6 @@ async def rg_realtors(message: types.Message):
 @router.callback_query(F.data.contains('realtor'))
 async def rg_realtors_ads(callback_query: types.CallbackQuery):
     _, realtor_username, user_id = callback_query.data.split('_')
-
+    objects = api_manager.advertiser_service.get_all(params={'user': int(user_id)})
+    print(objects)
+    await callback_query.message.answer(f'Все объявления риелтора: {html.bold(realtor_username)}')

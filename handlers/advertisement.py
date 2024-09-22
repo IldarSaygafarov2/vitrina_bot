@@ -223,6 +223,7 @@ async def process_repair(message: Message, state: FSMContext):
 
     username = message.from_user.username
     user_id = api_manager.user_service.get_user_id(username)
+    print(user_id)
 
     t = f'{html.bold('Кол-во комнат: ')}от {html.italic(rooms_from)} до {html.italic(rooms_to)}'
     t2 = f'\n{html.bold("Год постройки: ")}{html.italic(creation_date)}' if creation_date else ''
