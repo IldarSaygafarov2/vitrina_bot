@@ -27,7 +27,7 @@ def realtors_kb(realtors_list: list):
     kb = InlineKeyboardBuilder()
     for realtor in realtors_list:
         kb.button(text=f'{realtor["first_name"]} {realtor["last_name"]}',
-                  callback_data=f'realtor_{realtor["tg_username"]}_{realtor["id"]}')
+                  callback_data=f'realtor-{realtor["tg_username"]}-{realtor["id"]}')
 
     kb.adjust(2, 2)
     return kb.as_markup()

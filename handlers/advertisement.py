@@ -270,7 +270,6 @@ async def process_repair(message: Message, state: FSMContext):
             'repair_type': repair_type_choice,
             'is_studio': is_studio,
             'user': user_id['id'],
-            # "gallery": []
         },
     )
     print(new)

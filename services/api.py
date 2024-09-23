@@ -51,7 +51,11 @@ class UserAPIService(ApiService):
         return self.get(endpoint)
 
     def get_all_users(self, **kwargs):
-        endpoint = f'{settings.API_URL}/users/list'
+        endpoint = f'{settings.API_URL}/users/'
+        return self.get(endpoint, **kwargs)
+
+    def get_user_advertisements(self, user_id: int, **kwargs) -> list:
+        endpoint = f'{settings.API_URL}/users/{user_id}/advertisements/'
         return self.get(endpoint, **kwargs)
 
 
