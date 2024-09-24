@@ -10,7 +10,7 @@ from keyboards import callback as callback_kb
 from keyboards import reply as kb
 from services.api import api_manager
 from services.user import user_manager
-from services.utils import get_repair_type_by_name, get_property_type
+from services.utils import get_repair_type_by_name, get_property_type, create_advertisement_message
 from states.custom_states import AdvertisementState
 
 router = Router(name='advertisement')
@@ -209,7 +209,7 @@ async def process_repair(message: Message, state: FSMContext):
     is_studio = data.get('is_studio')
     creation_date = data.get('creation_date')
     address = data.get('address')
-
+    # msg = create_advertisement_message(data)
     file_names = []
 
     for photo in data['photos']:
@@ -272,7 +272,6 @@ async def process_repair(message: Message, state: FSMContext):
             'user': user_id['id'],
         },
     )
-    print(new)
 
     media_files = os.listdir('media')
     for media_file in media_files:
@@ -288,6 +287,7 @@ async def process_repair(message: Message, state: FSMContext):
             data=data
         )
         print(res)
-        print('image uploaded')
 
     await message.answer_media_group(media=media)
+    await state.clear()
+    await message.answer('Выберите действие ниже', reply_markup=kb.start_kb())

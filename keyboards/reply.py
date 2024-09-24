@@ -120,3 +120,15 @@ def rg_start_kb():
     return kb
 
 
+def ad_moderated_kb():
+    kb = ReplyKeyboardMarkup(
+        resize_keyboard=True,
+        one_time_keyboard=True,
+        keyboard=[
+            [
+                KeyboardButton(text='Проверенные'),
+                KeyboardButton(text='Непроверенные')
+            ]
+        ]
+    )
+    return kb

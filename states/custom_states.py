@@ -22,3 +22,8 @@ class AdvertisementState(StatesGroup):
     repair_type = State()
     is_studio = State()
     creation_date = State()
+
+
+class RGProcessState(StatesGroup):
+    show_moderated = State()
+    realtor_data = State()

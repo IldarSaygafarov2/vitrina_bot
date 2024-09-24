@@ -33,4 +33,9 @@ def realtors_kb(realtors_list: list):
     return kb.as_markup()
 
 
-
+def moderate_adv_kb(adv_id: int):
+    kb = InlineKeyboardBuilder()
+    kb.button(text='✅', callback_data=f'yes_{adv_id}')
+    kb.button(text='🚫', callback_data=f'no_{adv_id}')
+    kb.adjust(2, 2)
+    return kb.as_markup()
