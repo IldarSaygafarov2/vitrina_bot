@@ -5,8 +5,10 @@ from services.api import api_manager
 def start_kb():
     reply_builder = ReplyKeyboardBuilder()
     reply_builder.add(
-        KeyboardButton(text='Создать объявление')
+        KeyboardButton(text='Создать объявление'),
+        KeyboardButton(text='Мои объявления')
     )
+    reply_builder.adjust(2, 2)
     return reply_builder.as_markup()
 
 

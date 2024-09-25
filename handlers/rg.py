@@ -101,7 +101,9 @@ async def get_moderated_ads(message: types.Message, state: FSMContext):
 @router.callback_query(F.data.contains('yes'))
 async def moderate_ad_yes(callback_query: types.CallbackQuery, state: FSMContext):
     _, adv_id = callback_query.data.split('_')
-    print(adv_id)
+    adv_id = int(adv_id)
+    res = api_manager.advertiser_service.update_advertisement(adv_id, data={'is_moderated': True})
+    await callback_query.message.answer('Объявление прошло проверку')
 
 
 @router.callback_query(F.data.contains('no'))

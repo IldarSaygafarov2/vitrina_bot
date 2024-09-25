@@ -12,6 +12,11 @@ class ApiService:
         response = requests.post(url, **kwargs)
         return response.json()
 
+    def patch(self, url: str, data, **kwargs):
+        response = requests.patch(url, data, **kwargs)
+        response.raise_for_status()
+        return response.json()
+
 
 class CategoryAPIService(ApiService):
     def get_categories(self) -> list:
@@ -40,6 +45,14 @@ class AdvertisementAPIService(ApiService):
     def get_all(self, **kwargs):
         endpoint = f'{settings.API_URL}/advertisements/'
         return self.get(endpoint, **kwargs)
+
+    def get_one(self, advertisement_id: int, **kwargs):
+        endpoint = f'{settings.API_URL}/advertisements/{advertisement_id}/'
+        return self.get(endpoint, **kwargs)
+
+    def update_advertisement(self, advertisement_id: int, data, **kwargs):
+        endpoint = f'{settings.API_URL}/advertisements/{advertisement_id}/'
+        return self.patch(endpoint, data, **kwargs)
 
 
 class UserAPIService(ApiService):

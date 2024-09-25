@@ -27,6 +27,42 @@ async def start_creating_ad(message: Message, state: FSMContext):
     await message.answer(f'Выберите один из пунктов ниже: ', reply_markup=kb.main_categories_kb())
 
 
+@router.message(F.text.lower() == 'мои объявления')
+async def realtors_advertisements(message: Message, state: FSMContext):
+    await message.answer(f'Выберите пунк ниже', reply_markup=kb.ad_moderated_kb())
+
+
+@router.message(F.text.lower() == 'проверенные')
+async def realtors_moderated_ads(message: Message, state: FSMContext):
+    username = message.from_user.username
+    user_id = api_manager.user_service.get_user_id(username)
+    print(user_id)
+    advertisements = api_manager.user_service.get_user_advertisements(
+        user_id=user_id['id'],
+        params={'is_moderated': True}
+    )
+    msg = f'Всего проверенных объявлений: {len(advertisements)}'
+    await message.answer(msg)
+    for advertisement in advertisements:
+        adv_msg = create_advertisement_message(advertisement)
+        await message.answer(adv_msg)
+
+
+@router.message(F.text.lower() == 'непроверенные')
+async def realtors_moderated_ads(message: Message, state: FSMContext):
+    username = message.from_user.username
+    user_id = api_manager.user_service.get_user_id(username)
+    advertisements = api_manager.user_service.get_user_advertisements(
+        user_id=user_id['id'],
+        params={'is_moderated': False}
+    )
+    msg = f'Всего непроверенных объявлений: {len(advertisements)}'
+    await message.answer(msg)
+    for advertisement in advertisements:
+        adv_msg = create_advertisement_message(advertisement)
+        await message.answer(adv_msg)
+
+
 @router.message(AdvertisementState.main_categories)
 async def process_main_categories(message: Message, state: FSMContext):
     categories = api_manager.category_service.get_categories()
