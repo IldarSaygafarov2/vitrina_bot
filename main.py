@@ -11,8 +11,8 @@ import requests
 
 
 async def main():
-    dp.include_routers(advertisement.router)
     dp.include_routers(rg.router)
+    dp.include_routers(advertisement.router)
     dp.include_routers(simple_user.router)
     await dp.start_polling(bot)
 

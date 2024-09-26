@@ -11,14 +11,15 @@ from states.custom_states import RGProcessState
 router = Router(name='rg_user')
 
 
-@router.message(CommandStart(),
-                F.func(lambda msg: user_manager.is_user_rg(msg.from_user.username)))
+@router.message(
+    CommandStart(),
+    F.func(lambda msg: user_manager.is_user_rg(msg.from_user.username))
+)
 async def rg_start(message: types.Message):
     await message.answer(f'Привет, Руководитель группы', reply_markup=reply.rg_start_kb())
 
 
-@router.message(F.text == 'Список риелторов',
-                F.func(lambda msg: user_manager.is_user_rg(msg.from_user.username)))
+@router.message(F.text == 'Список риелторов')
 async def rg_realtors(message: types.Message):
     res = api_manager.user_service.get_all_users(params={'user_type': 'group_director'})
     await message.answer('Список риелторов', reply_markup=callback.realtors_kb(res))
@@ -32,38 +33,39 @@ async def rg_realtors_ads(callback_query: types.CallbackQuery, state: FSMContext
         'realtor_id': user_id
     }
     await state.update_data(realtor_data=realtor_data)
+    await state.set_state(RGProcessState.process_adverts)
     await callback_query.message.answer(f'Какие объявления показать', reply_markup=reply.ad_moderated_kb())
 
 
-@router.message(F.text == 'Проверенные')
+@router.message(
+    RGProcessState.process_adverts,
+    # F.text == 'Проверенные' | F.text == 'Нерповереные',
+)
 async def get_moderated_ads(message: types.Message, state: FSMContext):
-    print('assss')
+    status = 'checked' if message.text == 'Проверенные' else 'unchecked'
     data = await state.get_data()
     user_id = int(data['realtor_data']['realtor_id'])
     username = data['realtor_data']['username']
-    objects: list[dict] = api_manager.user_service.get_user_advertisements(user_id=user_id,
-                                                                           params={'is_moderated': True})
-    if not objects:
-        await message.answer('Нет объявлений', )
-        return
-    await message.answer(f'Проверенные объявления риелтора: {username}')
-    for obj in objects:
-        msg = create_advertisement_message(obj)
-        await message.answer(msg)
 
+    if status == 'checked':
+        await state.set_state(RGProcessState.process_checked)
+        await message.answer(f'Проверенные объявления риелтора: {username}')
+        objects: list[dict] = api_manager.user_service.get_user_advertisements(user_id=user_id,
+                                                                               params={'is_moderated': True})
+        if not objects:
+            await message.answer('Нет объявлений', )
+            return
+        for obj in objects:
+            msg = create_advertisement_message(obj)
+            await message.answer(msg)
+    if status == 'unchecked':
+        objects: list[dict] = api_manager.user_service.get_user_advertisements(user_id=user_id,
+                                                                               params={'is_moderated': False})
+        await message.answer(f'Непроверенные объявления риелтора: {username}')
+        for obj in objects:
+            msg = create_advertisement_message(obj)
+            await message.answer(msg, reply_markup=callback.moderate_adv_kb(obj.get('id')))
 
-@router.message(F.text == 'Непроверенные')
-async def get_moderated_ads(message: types.Message, state: FSMContext):
-    print('assss2222')
-    data = await state.get_data()
-    user_id = int(data['realtor_data']['realtor_id'])
-    username = data['realtor_data']['username']
-    objects: list[dict] = api_manager.user_service.get_user_advertisements(user_id=user_id,
-                                                                           params={'is_moderated': False})
-    await message.answer(f'Непроверенные объявления риелтора: {username}')
-    for obj in objects:
-        msg = create_advertisement_message(obj)
-        await message.answer(msg, reply_markup=callback.moderate_adv_kb(obj.get('id')))
 
 
 @router.callback_query(F.data.contains('yes'))

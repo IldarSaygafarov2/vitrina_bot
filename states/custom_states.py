@@ -27,3 +27,7 @@ class AdvertisementState(StatesGroup):
 class RGProcessState(StatesGroup):
     show_moderated = State()
     realtor_data = State()
+    process_adverts = State()
+    process_checked = State()
+    process_unchecked = State()
+
