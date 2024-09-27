@@ -8,6 +8,9 @@ from services.user import user_manager
 from services.utils import create_advertisement_message
 from states.custom_states import RGProcessState
 
+from data.loader import bot
+
+
 router = Router(name='rg_user')
 
 
@@ -67,7 +70,6 @@ async def get_moderated_ads(message: types.Message, state: FSMContext):
             await message.answer(msg, reply_markup=callback.moderate_adv_kb(obj.get('id')))
 
 
-
 @router.callback_query(F.data.contains('yes'))
 async def moderate_ad_yes(callback_query: types.CallbackQuery, state: FSMContext):
     _, adv_id = callback_query.data.split('_')
@@ -79,4 +81,19 @@ async def moderate_ad_yes(callback_query: types.CallbackQuery, state: FSMContext
 @router.callback_query(F.data.contains('no'))
 async def moderate_ad_no(callback_query: types.CallbackQuery, state: FSMContext):
     _, adv_id = callback_query.data.split('_')
-    print(adv_id)
+    await state.set_state(RGProcessState.process_unchecked)
+    await state.update_data(adv_id=adv_id)
+    await callback_query.message.answer(f'Напишите причину, почему данное объвление не прошло модерацию')
+
+
+@router.message(
+    RGProcessState.process_unchecked
+)
+async def moderate_ad_unchecked(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    realtor_data = data['realtor_data']
+    text = message.text
+    await bot.send_message(chat_id=f'@{realtor_data["username"]}', text=text)
+
+
+

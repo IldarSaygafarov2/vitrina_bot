@@ -4,7 +4,8 @@ import sys
 
 from data.loader import bot, dp
 from handlers import advertisement, simple_user, rg
-import requests
+# import requests
+
 
 # url = 'http://127.0.0.1:8000/api/v1/'
 # print(requests.get('http://127.0.0.1:8000/api/v1/districts/', headers={'Accept-Language': 'uz'}).json())
