@@ -18,7 +18,8 @@ router = Router(name='advertisement')
 
 @router.message(Command(commands=['start']), F.func(lambda msg: user_manager.is_user_realtor(msg.from_user.username)))
 async def cmd_start(message: types.Message):
-    await message.answer(f'Привет, {html.bold(message.from_user.full_name)}', reply_markup=kb.start_kb())
+    fullname = message.from_user.full_name
+    await message.answer(f'Привет, {html.bold(fullname)}', reply_markup=kb.start_kb())
 
 
 @router.message(F.text.lower() == 'создать объявление')
@@ -29,7 +30,7 @@ async def start_creating_ad(message: Message, state: FSMContext):
 
 @router.message(F.text.lower() == 'мои объявления')
 async def realtors_advertisements(message: Message, state: FSMContext):
-    await message.answer(f'Выберите пунк ниже', reply_markup=kb.ad_moderated_kb())
+    await message.answer(f'Выберите пункт ниже', reply_markup=kb.ad_moderated_kb())
 
 
 @router.message(F.text.lower() == 'проверенные')
