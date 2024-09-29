@@ -37,7 +37,6 @@ async def realtors_advertisements(message: Message, state: FSMContext):
 async def realtors_moderated_ads(message: Message, state: FSMContext):
     username = message.from_user.username
     user_id = api_manager.user_service.get_user_id(username)
-    print(user_id)
     advertisements = api_manager.user_service.get_user_advertisements(
         user_id=user_id['id'],
         params={'is_moderated': True}
@@ -123,11 +122,26 @@ async def process_description(message: Message, state: FSMContext):
 @router.message(AdvertisementState.district)
 async def process_district(callback: CallbackQuery, state: FSMContext):
     _, district_slug = callback.data.split('_')
+    data = await state.get_data()
     district = api_manager.district_service.get_district(district_slug)
     await state.update_data(district=district)
-    await state.set_state(AdvertisementState.address)
     await callback.message.answer(f'Выбранный район: {html.bold(district["name"])}')
-    await callback.message.answer('Напишите точный адрес недвижимости')
+
+    property_data = data['property_categories']['slug']
+    if property_data == 'doma':
+        await state.set_state(AdvertisementState.house_quadrature)
+        await callback.message.answer('Укажите общую площадь участка')
+    else:
+        await state.set_state(AdvertisementState.address)
+        await callback.message.answer('Напишите точный адрес недвижимости')
+
+
+@router.message(AdvertisementState.house_quadrature)
+async def process_house_quadrature(message: Message, state: FSMContext):
+    data = await state.get_data()
+    await state.update_data(house_quadrature=data['house_quadrature'])
+    await state.set_state(AdvertisementState.address)
+    await message.answer('Напишите точный адрес недвижимости')
 
 
 @router.message(AdvertisementState.address)

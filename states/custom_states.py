@@ -22,6 +22,7 @@ class AdvertisementState(StatesGroup):
     repair_type = State()
     is_studio = State()
     creation_date = State()
+    house_quadrature = State()
 
 
 class RGProcessState(StatesGroup):
