@@ -139,7 +139,7 @@ async def process_district(callback: CallbackQuery, state: FSMContext):
 @router.message(AdvertisementState.house_quadrature)
 async def process_house_quadrature(message: Message, state: FSMContext):
     data = await state.get_data()
-    await state.update_data(house_quadrature=data['house_quadrature'])
+    await state.update_data(house_quadrature=int(message.text))
     await state.set_state(AdvertisementState.address)
     await message.answer('Напишите точный адрес недвижимости')
 
@@ -260,6 +260,7 @@ async def process_repair(message: Message, state: FSMContext):
     is_studio = data.get('is_studio')
     creation_date = data.get('creation_date')
     address = data.get('address')
+    house_quadrature = data.get('house_quadrature')
     # msg = create_advertisement_message(data)
     file_names = []
 
@@ -278,6 +279,7 @@ async def process_repair(message: Message, state: FSMContext):
 
     t = f'{html.bold('Кол-во комнат: ')}от {html.italic(rooms_from)} до {html.italic(rooms_to)}'
     t2 = f'\n{html.bold("Год постройки: ")}{html.italic(creation_date)}' if creation_date else ''
+    t3 = f'\n<b>Общая площадь участка: </b><i>{house_quadrature}</i>' if property_category['slug'] == 'doma' else ''
 
     msg = f'''
 {html.bold('Заголовок: ')}
@@ -290,7 +292,7 @@ async def process_repair(message: Message, state: FSMContext):
 {html.bold('Адрес: ')}{html.italic(address)}
 {html.bold('Категория недвижимости: ')}{html.italic(property_category['name'])}
 {html.bold('Тип недвижимости: ')}{html.italic(property_type)}{t2}
-{html.bold('Цена: ')}{html.italic(price)}
+{html.bold('Цена: ')}{html.italic(price)}{t3}
 {t if not is_studio else f'{html.bold("Кол-во комнат: ")} Студия'}
 {html.bold('Квадратура: ')}от {html.italic(quadrature_from)} до {html.italic(quadrature_to)}
 {html.bold('Этаж: ')}от {html.italic(floor_from)} до {html.italic(floor_to)}
@@ -319,6 +321,7 @@ async def process_repair(message: Message, state: FSMContext):
             "auction_allowed": is_allowed,
             "category": property_category['id'],
             'repair_type': repair_type_choice,
+            'house_quadrature': house_quadrature,
             'is_studio': is_studio,
             'user': user_id['id'],
         },
