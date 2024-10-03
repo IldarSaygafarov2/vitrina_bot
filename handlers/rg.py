@@ -2,24 +2,23 @@ from aiogram import types, Router, F
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 
+from data.loader import bot
+from filters.rg import GroupDirectorFilter
 from keyboards import reply, callback
 from services.api import api_manager
-from services.user import user_manager
 from services.utils import create_advertisement_message
 from states.custom_states import RGProcessState
-
-from data.loader import bot
-
 
 router = Router(name='rg_user')
 
 
+# F.func(lambda msg: user_manager.is_user_rg(msg.from_user.username))
 @router.message(
     CommandStart(),
-    F.func(lambda msg: user_manager.is_user_rg(msg.from_user.username))
+    GroupDirectorFilter()
 )
 async def rg_start(message: types.Message):
-    await message.answer(f'Привет, Руководитель группы', reply_markup=reply.rg_start_kb())
+    await message.answer(f'Привет, руководитель группы', reply_markup=reply.rg_start_kb())
 
 
 @router.message(F.text == 'Список риелторов')
@@ -42,7 +41,6 @@ async def rg_realtors_ads(callback_query: types.CallbackQuery, state: FSMContext
 
 @router.message(
     RGProcessState.process_adverts,
-    # F.text == 'Проверенные' | F.text == 'Нерповереные',
 )
 async def get_moderated_ads(message: types.Message, state: FSMContext):
     status = 'checked' if message.text == 'Проверенные' else 'unchecked'
@@ -56,8 +54,9 @@ async def get_moderated_ads(message: types.Message, state: FSMContext):
         objects: list[dict] = api_manager.user_service.get_user_advertisements(user_id=user_id,
                                                                                params={'is_moderated': True})
         if not objects:
-            await message.answer('Нет объявлений', )
+            await message.answer('Нет объявлений')
             return
+
         for obj in objects:
             msg = create_advertisement_message(obj)
             await message.answer(msg)
@@ -74,7 +73,7 @@ async def get_moderated_ads(message: types.Message, state: FSMContext):
 async def moderate_ad_yes(callback_query: types.CallbackQuery, state: FSMContext):
     _, adv_id = callback_query.data.split('_')
     adv_id = int(adv_id)
-    res = api_manager.advertiser_service.update_advertisement(adv_id, data={'is_moderated': True})
+    api_manager.advertiser_service.update_advertisement(adv_id, data={'is_moderated': True})
     await callback_query.message.answer('Объявление прошло проверку')
 
 

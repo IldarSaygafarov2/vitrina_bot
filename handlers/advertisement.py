@@ -18,10 +18,13 @@ from templates.advertisements_texts import (
     choose_category_text
 )
 
+from filters.realtor import RealtorFilter
+
 router = Router(name='advertisement')
 
 
-@router.message(Command(commands=['start']), F.func(lambda msg: user_manager.is_user_realtor(msg.from_user.username)))
+# @router.message(Command(commands=['start']), F.func(lambda msg: user_manager.is_user_realtor(msg.from_user.username)))
+@router.message(Command(commands=['start']), RealtorFilter())
 async def cmd_start(message: types.Message):
     fullname = message.from_user.full_name
     await message.answer(f'Привет, {html.bold(fullname)}', reply_markup=kb.start_kb())
