@@ -9,7 +9,7 @@ def start_kb():
         KeyboardButton(text='Мои объявления')
     )
     reply_builder.adjust(2, 2)
-    return reply_builder.as_markup()
+    return reply_builder.as_markup(resize_keyboard=True)
 
 
 def main_categories_kb():

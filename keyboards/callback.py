@@ -27,7 +27,7 @@ def realtors_kb(realtors_list: list):
     kb = InlineKeyboardBuilder()
     for realtor in realtors_list:
         kb.button(text=f'{realtor["first_name"]} {realtor["last_name"]}',
-                  callback_data=f'realtor-{realtor["tg_username"]}-{realtor["id"]}')
+                  callback_data=f'realtor:{realtor["tg_username"]}:{realtor["id"]}')
     kb.button(text='Назад', callback_data='start_menu')
     kb.adjust(2)
     return kb.as_markup()
@@ -63,8 +63,8 @@ def realtor_advertisements_kb(ads_list: list, checked: bool):
     kb = InlineKeyboardBuilder()
     for idx, ad in enumerate(ads_list, start=1):
         callback_data = f'checked_ad:{ad["id"]}' if checked else f'unchecked_ad:{ad["id"]}'
-        kb.button(text=f'{ad["name"]}', callback_data=callback_data)
-    kb.adjust(2)
+        kb.button(text=f'{idx}. {ad["name"]}', callback_data=callback_data)
+    kb.adjust(1)
     kb.row(
         InlineKeyboardButton(text='Назад', callback_data='realtors_list')
     )

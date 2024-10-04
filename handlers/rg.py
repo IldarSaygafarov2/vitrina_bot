@@ -2,12 +2,11 @@ from aiogram import types, Router, F
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 
-from data.loader import bot
 from filters.rg import GroupDirectorFilter
 from keyboards import callback
 from keyboards.callback import ads_moderation_kb
 from services.api import api_manager
-from services.utils import create_advertisement_message
+from services.utils import download_medias_from_api
 from states.custom_states import RGProcessState
 
 router = Router(name='rg_user')
@@ -37,7 +36,7 @@ async def show_realtors_menu(
     await call.answer()
     realtors = api_manager.user_service.get_all_users(params={'user_type': 'realtor'})
     await call.message.edit_text(
-        text='Список риелоторов',
+        text='Список риелторов',
         reply_markup=callback.realtors_kb(realtors)
     )
 
@@ -47,7 +46,7 @@ async def rg_realtors_ads(
         call: types.CallbackQuery,
         state: FSMContext
 ):
-    _, realtor_username, user_id = call.data.split('-')
+    _, realtor_username, user_id = call.data.split(':')
     realtor_data = {
         'username': realtor_username,
         'realtor_id': user_id
@@ -55,7 +54,7 @@ async def rg_realtors_ads(
     await state.update_data(realtor_data=realtor_data)
     await state.set_state(RGProcessState.process_adverts)
     await call.message.edit_text(
-        text='Какие объявления показать',
+        text='Какие объявления показать?',
         reply_markup=ads_moderation_kb()
     )
 
@@ -64,17 +63,50 @@ async def rg_realtors_ads(
     F.data == 'checked_ads'
 )
 async def show_checked_ads_menu(
-        call: types.CallbackQuery
+        call: types.CallbackQuery,
+        state: FSMContext
 ):
     # await call.answer()
-    checked_ads = api_manager.advertiser_service.get_all(params={'is_moderated': True}).get('results')
-    print(checked_ads)
+    data = await state.get_data()
+    data = data.get('realtor_data')
+
+    checked_ads = (
+        api_manager.advertiser_service
+        .get_all(params={'is_moderated': True, 'user': data['realtor_id']})
+        .get('results')
+    )
     if not checked_ads:
-        return await call.answer('Нет проверенных объявлений')
+        return await call.answer('Нет проверенных объявлений', show_alert=True)
     await call.message.edit_text(
         text='Проверенные объявления',
         reply_markup=callback.realtor_advertisements_kb(checked_ads, checked=True)
     )
+
+
+@router.callback_query(
+    F.data == 'unchecked_ads'
+)
+async def show_unchecked_ads_menu(
+        call: types.CallbackQuery,
+        state: FSMContext
+):
+    data = await state.get_data()
+    realtor_data = data.get('realtor_data')
+    checked_ads = (
+        api_manager.advertiser_service
+        .get_all(params={'is_moderated': False, 'user': realtor_data['realtor_id']})
+        .get('results')
+    )
+    if not checked_ads:
+        return await call.answer('Нет непроверенных объявлений', show_alert=True)
+    await call.message.edit_text(
+        text='Непроверенные объявления',
+        reply_markup=callback.realtor_advertisements_kb(checked_ads, checked=False)
+    )
+
+
+
+
 
 
 #

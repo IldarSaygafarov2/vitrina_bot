@@ -1,4 +1,7 @@
+import requests
 from aiogram import html
+import os
+from settings import BASE_DIR
 
 
 def get_repair_type_by_name(repair_type_name):
@@ -59,3 +62,14 @@ def create_advertisement_message(item: dict) -> str:
 {html.bold('Этаж: ')}от {html.italic(floor_from)} до {html.italic(floor_to)}
 {html.bold('Ремонт: ')}{html.italic(repair_type)}
 '''
+
+
+def download_medias_from_api(path: str, media_url: str):
+    media_folder_exists = os.path.exists(os.path.join(BASE_DIR, 'media'))
+    if not media_folder_exists:
+        os.makedirs(os.path.join(BASE_DIR, 'media'))
+    filename = path.split('/')[-1]
+    with open(f'media/{filename}', 'wb') as f:
+        f.write(requests.get(media_url).content)
+
+
