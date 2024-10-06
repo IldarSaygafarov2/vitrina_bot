@@ -4,6 +4,17 @@ from aiogram.fsm.context import FSMContext
 
 from filters.realtor import RealtorFilter
 from keyboards import callback as callback_kb
+from keyboards.callback import return_back_kb
+from services.api import api_manager
+from templates.advertisements_texts import (
+    realtor_welcome_text,
+    choose_one_below_text,
+    choose_category_text,
+    chosen_property_category_text,
+    photos_question_text, photos_process_number_text
+)
+
+from states.custom_states import AdvertisementState
 
 router = Router(name='advertisement')
 
@@ -13,7 +24,7 @@ router = Router(name='advertisement')
 async def cmd_start(message: types.Message):
     fullname = message.from_user.full_name
     await message.answer(
-        text=f'Привет, {html.bold(fullname)}',
+        text=realtor_welcome_text(fullname),
         reply_markup=callback_kb.realtor_start_kb()
     )
 
@@ -25,7 +36,7 @@ async def show_realtor_start_menu(
     fullname = call.from_user.full_name
     await call.answer()
     await call.message.edit_text(
-        text=f'Привет, {html.bold(fullname)}',
+        text=realtor_welcome_text(fullname),
         reply_markup=callback_kb.realtor_start_kb()
     )
 
@@ -37,7 +48,7 @@ async def process_create_ad(
 ):
     await call.answer()
     await call.message.edit_text(
-        text='Выберите один из пунктов ниже',
+        text=choose_one_below_text(),
         reply_markup=callback_kb.ads_categories_kb()
     )
 
@@ -48,9 +59,77 @@ async def process_category_ad(
         state: FSMContext
 ):
     await call.answer()
-    _, category_name = call.data.split('_')
-    print(category_name)
-    await state.update_data(advertisement={})
+    _, operation_type = call.data.split('_')
+
+    await state.update_data(advertisement={'operation_type': operation_type})
+
+    property_categories = api_manager.category_service.get_categories()
+
+    await call.message.edit_text(
+        text=choose_category_text(
+            operation_type=operation_type
+        ),
+        reply_markup=callback_kb.property_categories_kb(
+            categories=property_categories
+        )
+    )
+
+
+@router.callback_query(F.data.startswith('property_category'))
+async def process_property_category(
+        call: types.CallbackQuery,
+        state: FSMContext
+):
+    await call.answer()
+    _, category_slug = call.data.split(':')
+    property_category = api_manager.category_service.get_category(category_slug)
+
+    state_data = await state.get_data()
+    state_advertisement = state_data.get('advertisement')
+    state_advertisement.update({'property_category': property_category})
+
+    await state.update_data(advertisement=state_advertisement)
+
+    msg = chosen_property_category_text(
+        category_name=property_category.get('name'),
+    ) + photos_question_text()
+
+    await state.set_state(AdvertisementState.photos_number)
+
+    await call.message.edit_text(
+        text=msg,
+        reply_markup=return_back_kb(
+            callback_data=f'category_{state_advertisement["operation_type"]}'
+        )
+    )
+
+@router.message(AdvertisementState.photos_number)
+async def get_advertisement_photos_number(
+        message: types.Message,
+        state: FSMContext
+):
+    photos_number = int(message.text)
+
+    state_data = await state.get_data()
+    advertisement_state = state_data.get('advertisement')
+    advertisement_state['photos_number'] = photos_number
+    await state.update_data(advertisement=advertisement_state)
+    await state.set_state(AdvertisementState.photos)
+    await message.edit_text(
+        text=photos_process_number_text(photos_number),
+        reply_markup=return_back_kb(
+            callback_data=f'property_category:{advertisement_state["property_category"]["slug"]}'
+        )
+    )
+
+
+@router.message(AdvertisementState.photos)
+async def get_advertisement_photos(
+        message: types.Message,
+        state: FSMContext
+):
+    state_data = await state.get_data()
+
 
 #
 # @router.message(F.text.lower() == 'создать объявление')
@@ -62,42 +141,7 @@ async def process_category_ad(
 #     )
 #
 #
-# @router.message(F.text.lower() == 'мои объявления')
-# async def realtors_advertisements(message: Message, state: FSMContext):
-#     await message.answer(
-#         choose_one_below_text(),
-#         reply_markup=kb.ad_moderated_kb()
-#     )
-#
-#
-# @router.message(F.text.lower() == 'проверенные')
-# async def realtors_moderated_ads(message: Message, state: FSMContext):
-#     username = message.from_user.username
-#     user_id = api_manager.user_service.get_user_id(username)
-#     advertisements = api_manager.user_service.get_user_advertisements(
-#         user_id=user_id['id'],
-#         params={'is_moderated': True}
-#     )
-#     msg = total_checked_or_unchecked_advertisements_text(advertisements, is_checked=True)
-#     await message.answer(msg)
-#     for advertisement in advertisements:
-#         adv_msg = create_advertisement_message(advertisement)
-#         await message.answer(adv_msg)
-#
-#
-# @router.message(F.text.lower() == 'непроверенные')
-# async def realtors_moderated_ads(message: Message, state: FSMContext):
-#     username = message.from_user.username
-#     user_id = api_manager.user_service.get_user_id(username)
-#     advertisements = api_manager.user_service.get_user_advertisements(
-#         user_id=user_id['id'],
-#         params={'is_moderated': False}
-#     )
-#     msg = total_checked_or_unchecked_advertisements_text(advertisements, is_checked=False)
-#     await message.answer(msg)
-#     for advertisement in advertisements:
-#         adv_msg = create_advertisement_message(advertisement)
-#         await message.answer(adv_msg)
+
 #
 #
 # @router.message(AdvertisementState.main_categories)
@@ -384,3 +428,41 @@ async def process_category_ad(
 #     await message.answer_media_group(media=media)
 #     await state.clear()
 #     await message.answer('Выберите действие ниже', reply_markup=kb.start_kb())
+
+
+# @router.message(F.text.lower() == 'мои объявления')
+# async def realtors_advertisements(message: Message, state: FSMContext):
+#     await message.answer(
+#         choose_one_below_text(),
+#         reply_markup=kb.ad_moderated_kb()
+#     )
+#
+#
+# @router.message(F.text.lower() == 'проверенные')
+# async def realtors_moderated_ads(message: Message, state: FSMContext):
+#     username = message.from_user.username
+#     user_id = api_manager.user_service.get_user_id(username)
+#     advertisements = api_manager.user_service.get_user_advertisements(
+#         user_id=user_id['id'],
+#         params={'is_moderated': True}
+#     )
+#     msg = total_checked_or_unchecked_advertisements_text(advertisements, is_checked=True)
+#     await message.answer(msg)
+#     for advertisement in advertisements:
+#         adv_msg = create_advertisement_message(advertisement)
+#         await message.answer(adv_msg)
+#
+#
+# @router.message(F.text.lower() == 'непроверенные')
+# async def realtors_moderated_ads(message: Message, state: FSMContext):
+#     username = message.from_user.username
+#     user_id = api_manager.user_service.get_user_id(username)
+#     advertisements = api_manager.user_service.get_user_advertisements(
+#         user_id=user_id['id'],
+#         params={'is_moderated': False}
+#     )
+#     msg = total_checked_or_unchecked_advertisements_text(advertisements, is_checked=False)
+#     await message.answer(msg)
+#     for advertisement in advertisements:
+#         adv_msg = create_advertisement_message(advertisement)
+#         await message.answer(adv_msg)

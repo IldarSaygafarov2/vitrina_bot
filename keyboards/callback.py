@@ -39,14 +39,16 @@ def districts_kb(districts: list) -> InlineKeyboardMarkup:
     return kb
 
 
-def categories_kb(categories: list) -> InlineKeyboardMarkup:
-    kb = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text=category["name"], callback_data=f'category_{category["slug"]}')]
-            for category in categories
-        ]
+def property_categories_kb(categories: list) -> InlineKeyboardMarkup:
+    kb = InlineKeyboardBuilder()
+    for category in categories:
+        kb.button(text=category.get('name'), callback_data=f'property_category:{category["slug"]}')
+    kb.adjust(2)
+
+    kb.row(
+        InlineKeyboardButton(text='Назад', callback_data='create_ad')
     )
-    return kb
+    return kb.as_markup()
 
 
 def realtors_kb(realtors_list: list):
@@ -57,9 +59,6 @@ def realtors_kb(realtors_list: list):
     kb.button(text='Назад', callback_data='start_menu')
     kb.adjust(2)
     return kb.as_markup()
-
-
-
 
 
 def ads_moderation_kb():
@@ -98,4 +97,10 @@ def return_to_ads_kb(callback_data: str, adv_id: int, show_checks: bool = True):
         kb.button(text='🚫', callback_data=f'no_{adv_id}')
     kb.button(text='Назад', callback_data=callback_data)
     kb.adjust(2)
+    return kb.as_markup()
+
+
+def return_back_kb(callback_data: str):
+    kb = InlineKeyboardBuilder()
+    kb.button(text='Назад', callback_data=callback_data)
     return kb.as_markup()

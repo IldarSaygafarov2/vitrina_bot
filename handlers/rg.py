@@ -8,6 +8,14 @@ from keyboards.callback import ads_moderation_kb
 from services.api import api_manager
 from services.utils import create_advertisement_message
 from states.custom_states import RGProcessState
+from templates.rg_alert_texts import (
+    rg_no_checked_advertisements_text,
+    rg_no_unchecked_advertisements_text
+)
+from templates.rg_texts import (
+    rg_welcome_text, rg_list_text, rg_advertisements_type_text, rg_checked_advertisements_text,
+    rg_unchecked_advertisements_text, rg_advertisement_moderation_complete_text, rg_advertisement_decline_reason_text
+)
 
 router = Router(name='rg_user')
 
@@ -17,7 +25,7 @@ router = Router(name='rg_user')
     GroupDirectorFilter()
 )
 async def rg_start(message: types.Message):
-    await message.answer(f'Привет, руководитель группы', reply_markup=callback.group_director_kb())
+    await message.answer(rg_welcome_text(), reply_markup=callback.group_director_kb())
 
 
 @router.callback_query(F.data == 'start_menu')
@@ -25,7 +33,7 @@ async def show_start_menu(
         call: types.CallbackQuery
 ):
     await call.answer()
-    await call.message.edit_text(f'Привет, руководитель группы', reply_markup=callback.group_director_kb())
+    await call.message.edit_text(rg_welcome_text(), reply_markup=callback.group_director_kb())
 
 
 @router.callback_query(F.data == 'realtors_list')
@@ -35,7 +43,7 @@ async def show_realtors_menu(
     await call.answer()
     realtors = api_manager.user_service.get_all_users(params={'user_type': 'realtor'})
     await call.message.edit_text(
-        text='Список риелторов',
+        text=rg_list_text(),
         reply_markup=callback.realtors_kb(realtors)
     )
 
@@ -53,7 +61,7 @@ async def rg_realtors_ads(
     await state.update_data(realtor_data=realtor_data)
     await state.set_state(RGProcessState.process_adverts)
     await call.message.edit_text(
-        text='Какие объявления показать?',
+        text=rg_advertisements_type_text(),
         reply_markup=ads_moderation_kb()
     )
 
@@ -63,18 +71,17 @@ async def show_checked_ads_menu(
         call: types.CallbackQuery,
         state: FSMContext
 ):
-    # await call.answer()
     data = await state.get_data()
-    data = data.get('realtor_data')
+    realtor_data = data.get('realtor_data')
 
-    params = {'is_moderated': True, 'user': data['realtor_id']}
+    params = {'is_moderated': True, 'user': realtor_data['realtor_id']}
 
     checked_ads = api_manager.advertiser_service.get_all(params=params).get('results')
 
     if not checked_ads:
-        return await call.answer('Нет проверенных объявлений', show_alert=True)
+        return await call.answer(rg_no_checked_advertisements_text(), show_alert=True)
     await call.message.edit_text(
-        text='Проверенные объявления',
+        text=rg_checked_advertisements_text(),
         reply_markup=callback.realtor_advertisements_kb(checked_ads, checked=True)
     )
 
@@ -89,9 +96,9 @@ async def show_unchecked_ads_menu(
     params = {'is_moderated': False, 'user': realtor_data['realtor_id']}
     checked_ads = api_manager.advertiser_service.get_all(params=params).get('results')
     if not checked_ads:
-        return await call.answer('Нет непроверенных объявлений', show_alert=True)
+        return await call.answer(rg_no_unchecked_advertisements_text(), show_alert=True)
     await call.message.edit_text(
-        text='Непроверенные объявления',
+        text=rg_unchecked_advertisements_text(),
         reply_markup=callback.realtor_advertisements_kb(checked_ads, checked=False)
     )
 
@@ -120,12 +127,11 @@ async def confirm_advertisement_moderation(
         call: types.CallbackQuery,
         state: FSMContext
 ):
-    # await call.answer()
     adv_id = int(call.data.split("_")[1])
     api_manager.advertiser_service.update_advertisement(adv_id, data={'is_moderated': True})
-    await call.answer(f'Объявление успешно прошло модерацию', show_alert=True)
+    await call.answer(rg_advertisement_moderation_complete_text(), show_alert=True)
     await call.message.edit_text(
-        text='Привет, руководитель группы',
+        text=rg_welcome_text(),
         reply_markup=callback.group_director_kb()
     )
 
@@ -140,7 +146,7 @@ async def decline_advertisement_moderation(
     await state.set_state(RGProcessState.process_unchecked)
 
     await call.message.edit_text(
-        text='Напишите причину, почему данное объявление не прошло модерацию',
+        text=rg_advertisement_decline_reason_text(),
         reply_markup=callback.return_to_ads_kb('unchecked_ads', adv_id, show_checks=False)
     )
 
@@ -151,8 +157,6 @@ async def process_unchecked_ad(
         state: FSMContext
 ):
     print(message.text)
-
-
 
 #
 # @router.message(
