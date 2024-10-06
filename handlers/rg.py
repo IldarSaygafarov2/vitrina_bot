@@ -6,8 +6,8 @@ from filters.rg import GroupDirectorFilter
 from keyboards import callback
 from keyboards.callback import ads_moderation_kb
 from services.api import api_manager
-from states.custom_states import RGProcessState
 from services.utils import create_advertisement_message
+from states.custom_states import RGProcessState
 
 router = Router(name='rg_user')
 
@@ -67,11 +67,10 @@ async def show_checked_ads_menu(
     data = await state.get_data()
     data = data.get('realtor_data')
 
-    checked_ads = (
-        api_manager.advertiser_service
-        .get_all(params={'is_moderated': True, 'user': data['realtor_id']})
-        .get('results')
-    )
+    params = {'is_moderated': True, 'user': data['realtor_id']}
+
+    checked_ads = api_manager.advertiser_service.get_all(params=params).get('results')
+
     if not checked_ads:
         return await call.answer('Нет проверенных объявлений', show_alert=True)
     await call.message.edit_text(
@@ -88,8 +87,7 @@ async def show_unchecked_ads_menu(
     data = await state.get_data()
     realtor_data = data.get('realtor_data')
     params = {'is_moderated': False, 'user': realtor_data['realtor_id']}
-    checked_ads = (
-        api_manager.advertiser_service.get_all(params=params).get('results'))
+    checked_ads = api_manager.advertiser_service.get_all(params=params).get('results')
     if not checked_ads:
         return await call.answer('Нет непроверенных объявлений', show_alert=True)
     await call.message.edit_text(
@@ -107,6 +105,7 @@ async def show_unchecked_ads(
     _, adv_id = call.data.split(':')
 
     advertisement = api_manager.advertiser_service.get_one(advertisement_id=int(adv_id))
+    await state.update_data(advertisement=advertisement)
     await call.message.edit_text(
         text=create_advertisement_message(advertisement),
         reply_markup=callback.return_to_ads_kb(
@@ -115,6 +114,43 @@ async def show_unchecked_ads(
         )
     )
 
+
+@router.callback_query(F.data.startswith('yes'))
+async def confirm_advertisement_moderation(
+        call: types.CallbackQuery,
+        state: FSMContext
+):
+    # await call.answer()
+    adv_id = int(call.data.split("_")[1])
+    api_manager.advertiser_service.update_advertisement(adv_id, data={'is_moderated': True})
+    await call.answer(f'Объявление успешно прошло модерацию', show_alert=True)
+    await call.message.edit_text(
+        text='Привет, руководитель группы',
+        reply_markup=callback.group_director_kb()
+    )
+
+
+@router.callback_query(F.data.startswith('no'))
+async def decline_advertisement_moderation(
+        call: types.CallbackQuery,
+        state: FSMContext
+):
+    adv_id = int(call.data.split("_")[1])
+
+    await state.set_state(RGProcessState.process_unchecked)
+
+    await call.message.edit_text(
+        text='Напишите причину, почему данное объявление не прошло модерацию',
+        reply_markup=callback.return_to_ads_kb('unchecked_ads', adv_id, show_checks=False)
+    )
+
+
+@router.message(RGProcessState.process_unchecked)
+async def process_unchecked_ad(
+        message: types.Message,
+        state: FSMContext
+):
+    print(message.text)
 
 
 
