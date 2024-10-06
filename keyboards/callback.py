@@ -2,6 +2,32 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
+def realtor_start_kb():
+    kb = InlineKeyboardBuilder()
+    kb.button(text='Мои объявления', callback_data='show_my_ads')
+    kb.button(text='Добавить объявление', callback_data='create_ad')
+    kb.adjust(2)
+    return kb.as_markup()
+
+
+def ads_categories_kb():
+    kb = InlineKeyboardBuilder()
+    kb.button(text='Аренда', callback_data='category_Аренда')
+    kb.button(text='Покупка', callback_data='category_Покупка')
+    kb.button(text='Назад', callback_data='start_realtor')
+    kb.adjust(2)
+    return kb.as_markup()
+
+
+def group_director_kb():
+    kb = InlineKeyboardBuilder()
+    kb.button(text='Список риелторов', callback_data='realtors_list')
+    kb.button(text='Последние объявления', callback_data='latest_ads')
+
+    kb.adjust(2)
+    return kb.as_markup()
+
+
 def districts_kb(districts: list) -> InlineKeyboardMarkup:
     kb = InlineKeyboardMarkup(
         inline_keyboard=[
@@ -33,13 +59,7 @@ def realtors_kb(realtors_list: list):
     return kb.as_markup()
 
 
-def group_director_kb():
-    kb = InlineKeyboardBuilder()
-    kb.button(text='Список риелторов', callback_data='realtors_list')
-    kb.button(text='Последние объявления', callback_data='latest_ads')
 
-    kb.adjust(2)
-    return kb.as_markup()
 
 
 def ads_moderation_kb():
