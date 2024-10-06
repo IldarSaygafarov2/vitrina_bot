@@ -6,13 +6,12 @@ from filters.rg import GroupDirectorFilter
 from keyboards import callback
 from keyboards.callback import ads_moderation_kb
 from services.api import api_manager
-from services.utils import download_medias_from_api
 from states.custom_states import RGProcessState
+from services.utils import create_advertisement_message
 
 router = Router(name='rg_user')
 
 
-# F.func(lambda msg: user_manager.is_user_rg(msg.from_user.username))
 @router.message(
     CommandStart(),
     GroupDirectorFilter()
@@ -59,9 +58,7 @@ async def rg_realtors_ads(
     )
 
 
-@router.callback_query(
-    F.data == 'checked_ads'
-)
+@router.callback_query(F.data == 'checked_ads')
 async def show_checked_ads_menu(
         call: types.CallbackQuery,
         state: FSMContext
@@ -83,20 +80,16 @@ async def show_checked_ads_menu(
     )
 
 
-@router.callback_query(
-    F.data == 'unchecked_ads'
-)
+@router.callback_query(F.data == 'unchecked_ads')
 async def show_unchecked_ads_menu(
         call: types.CallbackQuery,
         state: FSMContext
 ):
     data = await state.get_data()
     realtor_data = data.get('realtor_data')
+    params = {'is_moderated': False, 'user': realtor_data['realtor_id']}
     checked_ads = (
-        api_manager.advertiser_service
-        .get_all(params={'is_moderated': False, 'user': realtor_data['realtor_id']})
-        .get('results')
-    )
+        api_manager.advertiser_service.get_all(params=params).get('results'))
     if not checked_ads:
         return await call.answer('Нет непроверенных объявлений', show_alert=True)
     await call.message.edit_text(
@@ -105,6 +98,22 @@ async def show_unchecked_ads_menu(
     )
 
 
+@router.callback_query(F.data.startswith('unchecked_ad'))
+async def show_unchecked_ads(
+        call: types.CallbackQuery,
+        state: FSMContext
+):
+    await call.answer()
+    _, adv_id = call.data.split(':')
+
+    advertisement = api_manager.advertiser_service.get_one(advertisement_id=int(adv_id))
+    await call.message.edit_text(
+        text=create_advertisement_message(advertisement),
+        reply_markup=callback.return_to_ads_kb(
+            callback_data='unchecked_ads',
+            adv_id=advertisement.get('id')
+        )
+    )
 
 
 

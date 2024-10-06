@@ -69,3 +69,12 @@ def realtor_advertisements_kb(ads_list: list, checked: bool):
         InlineKeyboardButton(text='Назад', callback_data='realtors_list')
     )
     return kb.as_markup()
+
+
+def return_to_ads_kb(callback_data: str, adv_id: int):
+    kb = InlineKeyboardBuilder()
+    kb.button(text='✅', callback_data=f'yes_{adv_id}')
+    kb.button(text='🚫', callback_data=f'no_{adv_id}')
+    kb.button(text='Назад', callback_data=callback_data)
+    kb.adjust(2)
+    return kb.as_markup()
