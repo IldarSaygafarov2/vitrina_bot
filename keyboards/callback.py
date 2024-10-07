@@ -106,3 +106,11 @@ def continue_kb():
     kb = InlineKeyboardBuilder()
     kb.button(text='Продолжить', callback_data='continue')
     return kb.as_markup()
+
+
+def realtors_ads_kb(realtor_id: int):
+    kb = InlineKeyboardBuilder()
+    kb.button(text='Проверенные', callback_data=f'checked_ads:{realtor_id}')
+    kb.button(text='Непроверенные', callback_data=f'unchecked_ads:{realtor_id}')
+    kb.adjust()
+    return kb.as_markup()

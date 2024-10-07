@@ -1,15 +1,15 @@
 import os
 
-from aiogram import Router, types, F, html
+from aiogram import Router, types, F
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
-from aiogram.types import FSInputFile, InputMediaPhoto
+from aiogram.types import InputMediaPhoto
 
 from filters.realtor import RealtorFilter
 from keyboards import callback as callback_kb
 from keyboards import reply as kb
 from services.api import api_manager
-from services.utils import create_advertisement_message, get_repair_type_by_name, get_property_type
+from services.utils import get_repair_type_by_name, get_property_type
 from states.custom_states import AdvertisementState
 from templates.advertisements_texts import (
     realtor_welcome_text,
@@ -28,7 +28,8 @@ from templates.advertisements_texts import (
     realtor_property_creation_year_text,
     realtor_price_text, realtor_is_auction_allowed_text, realtor_is_property_studio_text, realtor_quadrature_text,
     realtor_rooms_from_to_text, realtor_quadrature_from_to_text, realtor_floor_from_to_text,
-    realtor_advertisement_repair_type_text, realtor_advertisement_completed_text
+    realtor_advertisement_repair_type_text, realtor_advertisement_completed_text,
+    realtor_choose_advertisements_type_text
 )
 
 router = Router(name='advertisement')
@@ -326,29 +327,6 @@ async def process_repair(message: types.Message, state: FSMContext):
 
     username = message.from_user.username
     user_id = api_manager.user_service.get_user_id(username)
-
-#     t = f'{html.bold('Кол-во комнат: ')}от {html.italic(rooms_from)} до {html.italic(rooms_to)}'
-#     t2 = f'\n{html.bold("Год постройки: ")}{html.italic(creation_date)}' if creation_date else ''
-#     t3 = f'\n<b>Общая площадь участка: </b><i>{house_quadrature}</i>' if property_category['slug'] == 'doma' else ''
-#
-#     msg = f'''
-# {html.bold('Заголовок: ')}
-# {html.italic(title)}
-# {html.bold('Тип объявления: ')}
-# {html.italic(main_category)}
-# {html.bold('Описание: ')}
-# {html.italic(description)}
-# {html.bold('Район: ')}{html.italic(district['name'])}
-# {html.bold('Адрес: ')}{html.italic(address)}
-# {html.bold('Категория недвижимости: ')}{html.italic(property_category['name'])}
-# {html.bold('Тип недвижимости: ')}{html.italic(property_type)}{t2}
-# {html.bold('Цена: ')}{html.italic(price)}{t3}
-# {t if not is_studio else f'{html.bold("Кол-во комнат: ")} Студия'}
-# {html.bold('Квадратура: ')}от {html.italic(quadrature_from)} до {html.italic(quadrature_to)}
-# {html.bold('Этаж: ')}от {html.italic(floor_from)} до {html.italic(floor_to)}
-# {html.bold('Ремонт: ')}{html.italic(repair_type)}
-# '''
-
     msg = realtor_advertisement_completed_text(
         title=title,
         operation_type=main_category,
@@ -415,6 +393,35 @@ async def process_repair(message: types.Message, state: FSMContext):
     await message.answer_media_group(media=media)
     await state.clear()
     await message.answer('Выберите действие ниже', reply_markup=kb.start_kb())
+
+
+@router.message(
+    F.text.lower() == 'мои объявления',
+    RealtorFilter()
+)
+async def process_realtor_advertisements(
+        message: types.Message
+):
+    user_id = api_manager.user_service.get_user_id(
+        tg_username=message.from_user.username
+    ).get('id')
+
+    await message.answer(
+        text=realtor_choose_advertisements_type_text(),
+        reply_markup=callback_kb.realtors_ads_kb(realtor_id=user_id)
+    )
+
+
+@router.callback_query(
+    F.data.startswith('checked_ads'),
+)
+async def process_realtors_checked_ads(
+        call: types.CallbackQuery,
+        state: FSMContext
+):
+    await call.answer()
+    realtor_id = int(call.data.split(':')[-1])
+
 
 # @router.message(F.text.lower() == 'мои объявления')
 # async def realtors_advertisements(message: types.Message, state: FSMContext):

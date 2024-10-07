@@ -111,3 +111,7 @@ def realtor_advertisement_completed_text(**kwargs):
 <b>Этаж: </b>от <i>{kwargs["floor_from"]}</i> до <i>{kwargs["floor_to"]}</i>
 <b>Ремонт: </b><i>{kwargs["repair_type"]}</i>
 """
+
+
+def realtor_choose_advertisements_type_text():
+    return "Выберите какие объявления показать: "
