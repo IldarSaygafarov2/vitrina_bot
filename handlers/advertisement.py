@@ -1,10 +1,14 @@
+import os
+import time
+
 from aiogram import Router, types, html, F
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
-
+from aiogram.types import FSInputFile
+from aiogram.utils.media_group import MediaGroupBuilder
 from filters.realtor import RealtorFilter
 from keyboards import callback as callback_kb
-from keyboards.callback import return_back_kb
+from keyboards.callback import return_back_kb, continue_kb
 from services.api import api_manager
 from templates.advertisements_texts import (
     realtor_welcome_text,
@@ -16,10 +20,11 @@ from templates.advertisements_texts import (
 
 from states.custom_states import AdvertisementState
 
+from settings import BASE_DIR
+
 router = Router(name='advertisement')
 
 
-# @router.message(Command(commands=['start']), F.func(lambda msg: user_manager.is_user_realtor(msg.from_user.username)))
 @router.message(CommandStart(), RealtorFilter())
 async def cmd_start(message: types.Message):
     fullname = message.from_user.full_name
@@ -96,12 +101,14 @@ async def process_property_category(
 
     await state.set_state(AdvertisementState.photos_number)
 
-    await call.message.edit_text(
+    msg = await call.message.edit_text(
         text=msg,
         reply_markup=return_back_kb(
             callback_data=f'category_{state_advertisement["operation_type"]}'
         )
     )
+    await state.update_data(adv_message=msg)
+
 
 @router.message(AdvertisementState.photos_number)
 async def get_advertisement_photos_number(
@@ -112,15 +119,27 @@ async def get_advertisement_photos_number(
 
     state_data = await state.get_data()
     advertisement_state = state_data.get('advertisement')
-    advertisement_state['photos_number'] = photos_number
-    await state.update_data(advertisement=advertisement_state)
+    await state.update_data(
+        advertisement=advertisement_state,
+        photos=[],
+        message_ids=[],
+        photos_number=photos_number,
+
+    )
+
+    adv_message = state_data.get('adv_message')
+
     await state.set_state(AdvertisementState.photos)
-    await message.edit_text(
-        text=photos_process_number_text(photos_number),
+
+    callback_for_kb = f'property_category:{advertisement_state["property_category"]["slug"]}'
+    msg = await adv_message.edit_text(
+        text=photos_process_number_text(photos_number=photos_number),
         reply_markup=return_back_kb(
-            callback_data=f'property_category:{advertisement_state["property_category"]["slug"]}'
+            callback_data=callback_for_kb
         )
     )
+    await state.update_data(adv_message=msg)
+    await message.delete()
 
 
 @router.message(AdvertisementState.photos)
@@ -129,7 +148,64 @@ async def get_advertisement_photos(
         state: FSMContext
 ):
     state_data = await state.get_data()
+    photos: list = state_data.get('photos')
+    photos_number = state_data.get('photos_number')
+    message_ids = state_data.get('message_ids')
 
+    photo_file_id = message.photo[-1].file_id
+
+    photos.append(photo_file_id)
+
+    if len(photos) == photos_number:
+        media_group = MediaGroupBuilder()
+
+        for idx, photo in enumerate(photos):
+            file = await message.bot.get_file(file_id=photo)
+            file_path = file.file_path
+            file_name = file_path.split('/')[-1]
+            if not os.path.exists(BASE_DIR / 'media'):
+                os.makedirs(BASE_DIR / 'photos', exist_ok=True)
+            await message.bot.download_file(file_path, f'photos/{file_name}')
+
+            media_group.add_photo(
+                media=FSInputFile(path=file_path),
+                caption='Продолжить' if idx == 0 else None,
+                reply_markup=continue_kb()
+            )
+
+        message_ids.append(message_ids[-1] + 1)
+
+        for message_id in message_ids:
+            await message.bot.delete_message(
+                chat_id=message.chat.id,
+                message_id=message_id
+            )
+        await message.answer_media_group(
+            media=media_group.build(),
+            reply_markup=continue_kb()
+        )
+
+        # time.sleep(1)
+        #
+        # await message.edit_media(
+        #     media=media_group.build(),
+        #     reply_markup=continue_kb()
+        # )
+    else:
+        message_ids.append(message.message_id)
+
+        # await state.update_data(photos=photos)
+        # await state.set_state(AdvertisementState.title)
+
+    # if photos_number != len(state_data['photos']):
+    #     await adv_message.edit_text(
+    #         text=f'Осталось отправить: <b>{photos_number - photos_len} фотографий</b>',
+    #         reply_markup=return_back_kb(callback_for_kb)
+    #     )
+    # else:
+    #
+    #     await state.update_data(photos=state_data['photos'])
+    #     await state.set_state(AdvertisementState.title)
 
 #
 # @router.message(F.text.lower() == 'создать объявление')

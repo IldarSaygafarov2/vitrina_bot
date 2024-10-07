@@ -104,3 +104,9 @@ def return_back_kb(callback_data: str):
     kb = InlineKeyboardBuilder()
     kb.button(text='Назад', callback_data=callback_data)
     return kb.as_markup()
+
+
+def continue_kb():
+    kb = InlineKeyboardBuilder()
+    kb.button(text='Продолжить', callback_data='continue')
+    return kb.as_markup()
