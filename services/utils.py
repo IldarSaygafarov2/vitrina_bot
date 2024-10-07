@@ -1,6 +1,8 @@
+import os
+
 import requests
 from aiogram import html
-import os
+
 from settings import BASE_DIR
 
 

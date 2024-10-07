@@ -44,10 +44,6 @@ def property_categories_kb(categories: list) -> InlineKeyboardMarkup:
     for category in categories:
         kb.button(text=category.get('name'), callback_data=f'property_category:{category["slug"]}')
     kb.adjust(2)
-
-    kb.row(
-        InlineKeyboardButton(text='Назад', callback_data='create_ad')
-    )
     return kb.as_markup()
 
 
