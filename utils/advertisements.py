@@ -15,11 +15,16 @@ def save_advertisements_photos(
         photos: list[str],
         directory: str
 ):
-    create_directory_if_not_exists(directory)
+    create_directory_if_not_exists(BASE_DIR / directory)
+
+    photos_paths = []
 
     for photo in photos:
         photo_name = photo.split('/')[-1]
-        with open(f'{directory}/{photo_name}', 'wb') as f:
+        with open(f'{BASE_DIR}/{directory}/{photo_name}', 'wb') as f:
             photo_bytes = requests.get(photo).content
             f.write(photo_bytes)
+
+        photos_paths.append(f'{directory}/{photo_name}')
         print('photo saved successfully')
+    return photos_paths
