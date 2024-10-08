@@ -1,7 +1,8 @@
+from settings import BASE_DIR
 from aiogram import types, Router, F
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
-
+from utils.advertisements import save_advertisements_photos
 from filters.rg import GroupDirectorFilter
 from keyboards import callback
 from keyboards.callback import ads_moderation_kb
@@ -112,9 +113,17 @@ async def show_unchecked_ads(
 
     advertisement = api_manager.advertiser_service.get_one(advertisement_id=adv_id)
 
-    advertisement_gallery = [obj.get('photo') for obj in advertisement.get('gallery')]
+    advertisement_photos = [obj.get('photo') for obj in advertisement.get('gallery')]
 
-    print(advertisement_gallery)
+    save_advertisements_photos(
+        photos=advertisement_photos,
+        directory=f'{BASE_DIR}/photos'
+    )
+
+    # media: list[types.InputMediaPhoto] = [
+    #     types.InputMediaPhoto()
+    #     for photo in advertisement_photos
+    # ]
 
     await state.update_data(advertisement=advertisement)
     await call.message.edit_text(

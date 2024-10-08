@@ -11,6 +11,7 @@ from keyboards import reply as kb
 from services.api import api_manager
 from services.utils import get_repair_type_by_name, get_property_type
 from states.custom_states import AdvertisementState
+
 from templates import advertisements_texts as adv_texts
 # from templates import alert_texts
 
