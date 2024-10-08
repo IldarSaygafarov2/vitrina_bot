@@ -11,26 +11,9 @@ from keyboards import reply as kb
 from services.api import api_manager
 from services.utils import get_repair_type_by_name, get_property_type
 from states.custom_states import AdvertisementState
-from templates.advertisements_texts import (
-    realtor_welcome_text,
-    realtor_operation_type_text,
-    realtor_property_category_text,
-    realtor_selected_property_category_text,
-    realtor_photos_quantity_text,
-    realtor_photos_quantity_get_text,
-    realtor_title_text,
-    realtor_description_text,
-    realtor_choose_district_text,
-    realtor_chosen_district_text,
-    realtor_full_quadrature_of_house,
-    realtor_correct_address_text,
-    realtor_property_type_text,
-    realtor_property_creation_year_text,
-    realtor_price_text, realtor_is_auction_allowed_text, realtor_is_property_studio_text, realtor_quadrature_text,
-    realtor_rooms_from_to_text, realtor_quadrature_from_to_text, realtor_floor_from_to_text,
-    realtor_advertisement_repair_type_text, realtor_advertisement_completed_text,
-    realtor_choose_advertisements_type_text
-)
+from templates import advertisements_texts as adv_texts
+# from templates import alert_texts
+
 
 router = Router(name='advertisement')
 
@@ -39,7 +22,7 @@ router = Router(name='advertisement')
 async def cmd_start(message: types.Message):
     fullname = message.from_user.full_name
     await message.answer(
-        text=realtor_welcome_text(fullname),
+        text=adv_texts.realtor_welcome_text(fullname),
         reply_markup=kb.start_kb()
     )
 
@@ -48,7 +31,7 @@ async def cmd_start(message: types.Message):
 async def start_creating_ad(message: types.Message, state: FSMContext):
     await state.set_state(AdvertisementState.main_categories)
     await message.answer(
-        text=realtor_operation_type_text(),
+        text=adv_texts.realtor_operation_type_text(),
         reply_markup=kb.main_categories_kb()
     )
 
@@ -59,7 +42,7 @@ async def process_main_categories(message: types.Message, state: FSMContext):
     await state.update_data(main_categories=message.text)
     await state.set_state(AdvertisementState.property_categories)
     await message.answer(
-        realtor_property_category_text(),
+        text=adv_texts.realtor_property_category_text(),
         reply_markup=callback_kb.property_categories_kb(categories)
     )
 
@@ -73,11 +56,11 @@ async def process_photos_qty(callback: types.CallbackQuery, state: FSMContext):
     await state.update_data(property_categories=category)
     await state.set_state(AdvertisementState.photos_number)
     await callback.message.answer(
-        text=realtor_selected_property_category_text(
+        text=adv_texts.realtor_selected_property_category_text(
             property_category=category.get('name')
         ))
     await callback.message.answer(
-        text=realtor_photos_quantity_text(),
+        text=adv_texts.realtor_photos_quantity_text(),
         reply_markup=types.ReplyKeyboardRemove()
     )
 
@@ -87,7 +70,7 @@ async def process_photos_qty(message: types.Message, state: FSMContext):
     await state.update_data(photo_numbers=int(message.text), photos=[])
     await state.set_state(AdvertisementState.photos)
     await message.answer(
-        text=realtor_photos_quantity_get_text()
+        text=adv_texts.realtor_photos_quantity_get_text()
     )
 
 
@@ -99,7 +82,7 @@ async def process_photos(message: types.Message, state: FSMContext):
         await state.update_data(photos=current_state['photos'])
         await state.set_state(AdvertisementState.title)
         await message.answer(
-            text=realtor_title_text()
+            text=adv_texts.realtor_title_text()
         )
 
 
@@ -108,7 +91,7 @@ async def process_title(message: types.Message, state: FSMContext):
     await state.update_data(title=message.text)
     await state.set_state(AdvertisementState.full_description)
     await message.answer(
-        text=realtor_description_text()
+        text=adv_texts.realtor_description_text()
     )
 
 
@@ -118,7 +101,7 @@ async def process_description(message: types.Message, state: FSMContext):
     await state.update_data(full_description=message.text)
     await state.set_state(AdvertisementState.district)
     await message.answer(
-        text=realtor_choose_district_text(),
+        text=adv_texts.realtor_choose_district_text(),
         reply_markup=callback_kb.districts_kb(districts)
     )
 
@@ -131,7 +114,7 @@ async def process_district(callback: types.CallbackQuery, state: FSMContext):
     district = api_manager.district_service.get_district(district_slug)
     await state.update_data(district=district)
     await callback.message.answer(
-        text=realtor_chosen_district_text(
+        text=adv_texts.realtor_chosen_district_text(
             district=district.get('name')
         )
     )
@@ -140,12 +123,12 @@ async def process_district(callback: types.CallbackQuery, state: FSMContext):
     if property_data == 'doma':
         await state.set_state(AdvertisementState.house_quadrature)
         await callback.message.answer(
-            text=realtor_full_quadrature_of_house()
+            text=adv_texts.realtor_full_quadrature_of_house()
         )
     else:
         await state.set_state(AdvertisementState.address)
         await callback.message.answer(
-            text=realtor_correct_address_text()
+            text=adv_texts.realtor_correct_address_text()
         )
 
 
@@ -155,7 +138,7 @@ async def process_house_quadrature(message: types.Message, state: FSMContext):
     await state.update_data(house_quadrature=int(message.text))
     await state.set_state(AdvertisementState.address)
     await message.answer(
-        text=realtor_correct_address_text()
+        text=adv_texts.realtor_correct_address_text()
     )
 
 
@@ -164,7 +147,7 @@ async def process_address(message: types.Message, state: FSMContext):
     await state.update_data(address=message.text)
     await state.set_state(AdvertisementState.property_type)
     await message.answer(
-        text=realtor_property_type_text(),
+        text=adv_texts.realtor_property_type_text(),
         reply_markup=kb.property_type_kb()
     )
 
@@ -175,13 +158,13 @@ async def process_property(message: types.Message, state: FSMContext):
     if message.text == 'Новостройка':
         await state.set_state(AdvertisementState.creation_date)
         await message.answer(
-            text=realtor_property_creation_year_text()
+            text=adv_texts.realtor_property_creation_year_text()
         )
     elif message.text == 'Вторичный фонд':
         await state.set_state(AdvertisementState.price)
         await state.update_data(creation_date=0)
         await message.answer(
-            text=realtor_price_text(),
+            text=adv_texts.realtor_price_text(),
             reply_markup=types.ReplyKeyboardRemove()
         )
 
@@ -191,7 +174,7 @@ async def process_creation_date(message: types.Message, state: FSMContext):
     await state.update_data(creation_date=message.text)
     await state.set_state(AdvertisementState.price)
     await message.answer(
-        text=realtor_price_text(),
+        text=adv_texts.realtor_price_text(),
         reply_markup=types.ReplyKeyboardRemove()
     )
 
@@ -201,7 +184,7 @@ async def process_price(message: types.Message, state: FSMContext):
     await state.update_data(price=message.text)
     await state.set_state(AdvertisementState.auction_allowed)
     await message.answer(
-        text=realtor_is_auction_allowed_text(),
+        text=adv_texts.realtor_is_auction_allowed_text(),
         reply_markup=kb.is_auction_allowed_kb()
     )
 
@@ -212,7 +195,7 @@ async def process_auction_allowed(message: types.Message, state: FSMContext):
     await state.update_data(auction_allowed=is_allowed)
     await state.set_state(AdvertisementState.is_studio)
     await message.answer(
-        text=realtor_is_property_studio_text(),
+        text=adv_texts.realtor_is_property_studio_text(),
         reply_markup=kb.is_studio_kb()
     )
 
@@ -223,13 +206,13 @@ async def process_is_studio(message: types.Message, state: FSMContext):
         await state.update_data(is_studio=True)
         await state.set_state(AdvertisementState.quadrature_from)
         await message.answer(
-            text=realtor_quadrature_text()
+            text=adv_texts.realtor_quadrature_text()
         )
     else:
         await state.update_data(is_studio=False)
         await state.set_state(AdvertisementState.rooms_from)
         await message.answer(
-            text=realtor_rooms_from_to_text(
+            text=adv_texts.realtor_rooms_from_to_text(
                 is_from=False
             )
         )
@@ -240,7 +223,7 @@ async def process_rooms(message: types.Message, state: FSMContext):
     await state.update_data(rooms_from=message.text)
     await state.set_state(AdvertisementState.rooms_to)
     await message.answer(
-        text=realtor_rooms_from_to_text(
+        text=adv_texts.realtor_rooms_from_to_text(
             is_from=True
         )
     )
@@ -251,7 +234,7 @@ async def process_rooms(message: types.Message, state: FSMContext):
     await state.update_data(rooms_to=message.text)
     await state.set_state(AdvertisementState.quadrature_from)
     await message.answer(
-        text=realtor_quadrature_from_to_text(is_from=True)
+        text=adv_texts.realtor_quadrature_from_to_text(is_from=True)
     )
 
 
@@ -260,7 +243,7 @@ async def process_quadrature(message: types.Message, state: FSMContext):
     await state.update_data(quadrature_from=message.text)
     await state.set_state(AdvertisementState.quadrature_to)
     await message.answer(
-        text=realtor_quadrature_from_to_text(is_from=False)
+        text=adv_texts.realtor_quadrature_from_to_text(is_from=False)
     )
 
 
@@ -269,7 +252,7 @@ async def process_quadrature(message: types.Message, state: FSMContext):
     await state.update_data(quadrature_to=message.text)
     await state.set_state(AdvertisementState.floor_from)
     await message.answer(
-        text=realtor_floor_from_to_text(is_from=True)
+        text=adv_texts.realtor_floor_from_to_text(is_from=True)
     )
 
 
@@ -278,7 +261,7 @@ async def process_floor(message: types.Message, state: FSMContext):
     await state.update_data(floor_from=message.text)
     await state.set_state(AdvertisementState.floor_to)
     await message.answer(
-        text=realtor_floor_from_to_text(is_from=False)
+        text=adv_texts.realtor_floor_from_to_text(is_from=False)
     )
 
 
@@ -287,7 +270,7 @@ async def process_floor(message: types.Message, state: FSMContext):
     await state.update_data(floor_to=message.text)
     await state.set_state(AdvertisementState.repair_type)
     await message.answer(
-        text=realtor_advertisement_repair_type_text(),
+        text=adv_texts.realtor_advertisement_repair_type_text(),
         reply_markup=kb.repair_type_kb()
     )
 
@@ -327,7 +310,7 @@ async def process_repair(message: types.Message, state: FSMContext):
 
     username = message.from_user.username
     user_id = api_manager.user_service.get_user_id(username)
-    msg = realtor_advertisement_completed_text(
+    msg = adv_texts.realtor_advertisement_completed_text(
         title=title,
         operation_type=main_category,
         description=description,
@@ -392,7 +375,10 @@ async def process_repair(message: types.Message, state: FSMContext):
 
     await message.answer_media_group(media=media)
     await state.clear()
-    await message.answer('Выберите действие ниже', reply_markup=kb.start_kb())
+    await message.answer(
+        text=adv_texts.realtor_choose_action_below_text(),
+        reply_markup=kb.start_kb()
+    )
 
 
 @router.message(
@@ -407,20 +393,10 @@ async def process_realtor_advertisements(
     ).get('id')
 
     await message.answer(
-        text=realtor_choose_advertisements_type_text(),
+        text=adv_texts.realtor_choose_advertisements_type_text(),
         reply_markup=callback_kb.realtors_ads_kb(realtor_id=user_id)
     )
 
-
-@router.callback_query(
-    F.data.startswith('checked_ads'),
-)
-async def process_realtors_checked_ads(
-        call: types.CallbackQuery,
-        state: FSMContext
-):
-    await call.answer()
-    realtor_id = int(call.data.split(':')[-1])
 
 
 # @router.message(F.text.lower() == 'мои объявления')

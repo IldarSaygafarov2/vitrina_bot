@@ -115,3 +115,9 @@ def realtor_advertisement_completed_text(**kwargs):
 
 def realtor_choose_advertisements_type_text():
     return "Выберите какие объявления показать: "
+
+
+def realtor_choose_action_below_text():
+    return "Выберите действие ниже: "
+
+

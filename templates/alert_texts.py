@@ -1,6 +1,6 @@
-def rg_no_unchecked_advertisements_text():
+def no_unchecked_advertisements_alert():
     return "Нет непроверенных объявлений"
 
 
-def rg_no_checked_advertisements_text():
+def no_checked_advertisements_alert():
     return "Нет проверенных объявлений"

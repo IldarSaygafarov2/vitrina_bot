@@ -8,9 +8,8 @@ from keyboards.callback import ads_moderation_kb
 from services.api import api_manager
 from services.utils import create_advertisement_message
 from states.custom_states import RGProcessState
-from templates.rg_alert_texts import (
-    rg_no_checked_advertisements_text,
-    rg_no_unchecked_advertisements_text
+from templates.alert_texts import (
+    no_unchecked_advertisements_alert, no_checked_advertisements_alert
 )
 from templates.rg_texts import (
     rg_welcome_text, rg_list_text, rg_advertisements_type_text, rg_checked_advertisements_text,
@@ -21,10 +20,10 @@ router = Router(name='rg_user')
 
 
 @router.message(
+    GroupDirectorFilter(),
     CommandStart(),
-    GroupDirectorFilter()
 )
-async def rg_start(message: types.Message):
+async def rg_start(message: types.Message, state: FSMContext):
     await message.answer(rg_welcome_text(), reply_markup=callback.group_director_kb())
 
 
@@ -79,7 +78,7 @@ async def show_checked_ads_menu(
     checked_ads = api_manager.advertiser_service.get_all(params=params).get('results')
 
     if not checked_ads:
-        return await call.answer(rg_no_checked_advertisements_text(), show_alert=True)
+        return await call.answer(no_checked_advertisements_alert(), show_alert=True)
     await call.message.edit_text(
         text=rg_checked_advertisements_text(),
         reply_markup=callback.realtor_advertisements_kb(checked_ads, checked=True)
@@ -96,9 +95,9 @@ async def show_unchecked_ads_menu(
     params = {'is_moderated': False, 'user': realtor_data['realtor_id']}
     checked_ads = api_manager.advertiser_service.get_all(params=params).get('results')
     if not checked_ads:
-        return await call.answer(rg_no_unchecked_advertisements_text(), show_alert=True)
+        return await call.answer(no_unchecked_advertisements_alert(), show_alert=True)
     await call.message.edit_text(
-        text=rg_unchecked_advertisements_text(),
+        text=rg_checked_advertisements_text(),
         reply_markup=callback.realtor_advertisements_kb(checked_ads, checked=False)
     )
 
@@ -109,15 +108,45 @@ async def show_unchecked_ads(
         state: FSMContext
 ):
     await call.answer()
-    _, adv_id = call.data.split(':')
+    adv_id = int(call.data.split(':')[-1])
 
-    advertisement = api_manager.advertiser_service.get_one(advertisement_id=int(adv_id))
+    advertisement = api_manager.advertiser_service.get_one(advertisement_id=adv_id)
+
+    advertisement_gallery = [obj.get('photo') for obj in advertisement.get('gallery')]
+
+    print(advertisement_gallery)
+
     await state.update_data(advertisement=advertisement)
     await call.message.edit_text(
         text=create_advertisement_message(advertisement),
         reply_markup=callback.return_to_ads_kb(
             callback_data='unchecked_ads',
             adv_id=advertisement.get('id')
+        )
+    )
+
+
+@router.callback_query(F.data.startswith('checked_ad'))
+async def show_checked_ads(
+        call: types.CallbackQuery,
+        state: FSMContext
+):
+    await call.answer()
+    adv_id = int(call.data.split(':')[-1])
+
+    advertisement = api_manager.advertiser_service.get_one(advertisement_id=adv_id)
+
+    advertisement_gallery = [obj.get('photo') for obj in advertisement.get('gallery')]
+
+    print(advertisement_gallery)
+
+    await state.update_data(advertisement=advertisement)
+    await call.message.edit_text(
+        text=create_advertisement_message(advertisement),
+        reply_markup=callback.return_to_ads_kb(
+            callback_data='checked_ads',
+            adv_id=advertisement.get('id'),
+            show_checks=False
         )
     )
 
