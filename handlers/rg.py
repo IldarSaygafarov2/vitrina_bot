@@ -117,15 +117,8 @@ async def show_unchecked_ads(
 
     save_advertisements_photos(
         photos=advertisement_photos,
-        directory=f'{BASE_DIR}/photos'
+        directory='photos'
     )
-
-    # media: list[types.InputMediaPhoto] = [
-    #     types.InputMediaPhoto()
-    #     for photo in advertisement_photos
-    # ]
-
-
 
     await state.update_data(advertisement=advertisement)
     await call.message.edit_text(
@@ -194,63 +187,8 @@ async def process_unchecked_ad(
         message: types.Message,
         state: FSMContext
 ):
-    print(message.text)
+    state_data = await state.get_data()
 
-#
-# @router.message(
-#     RGProcessState.process_adverts,
-# )
-# async def get_moderated_ads(message: types.Message, state: FSMContext):
-#     status = 'checked' if message.text == 'Проверенные' else 'unchecked'
-#     data = await state.get_data()
-#     user_id = int(data['realtor_data']['realtor_id'])
-#     username = data['realtor_data']['username']
-#
-#     if status == 'checked':
-#         await state.set_state(RGProcessState.process_checked)
-#         await message.answer(f'Проверенные объявления риелтора: {username}')
-#         objects: list[dict] = api_manager.user_service.get_user_advertisements(user_id=user_id,
-#                                                                                params={'is_moderated': True})
-#         if not objects:
-#             await message.answer('Нет объявлений')
-#             return
-#
-#         for obj in objects:
-#             msg = create_advertisement_message(obj)
-#             await message.answer(msg)
-#     if status == 'unchecked':
-#         objects: list[dict] = api_manager.user_service.get_user_advertisements(user_id=user_id,
-#                                                                                params={'is_moderated': False})
-#         await message.answer(f'Непроверенные объявления риелтора: {username}')
-#         for obj in objects:
-#             msg = create_advertisement_message(obj)
-#             await message.answer(msg, reply_markup=callback.moderate_adv_kb(obj.get('id')))
-#
-#
-# @router.callback_query(F.data.contains('yes'))
-# async def moderate_ad_yes(callback_query: types.CallbackQuery, state: FSMContext):
-#     _, adv_id = callback_query.data.split('_')
-#     adv_id = int(adv_id)
-#     api_manager.advertiser_service.update_advertisement(adv_id, data={'is_moderated': True})
-#     await callback_query.message.answer('Объявление прошло проверку')
-#
-#
-# @router.callback_query(F.data.contains('no'))
-# async def moderate_ad_no(callback_query: types.CallbackQuery, state: FSMContext):
-#     _, adv_id = callback_query.data.split('_')
-#     await state.set_state(RGProcessState.process_unchecked)
-#     await state.update_data(adv_id=adv_id)
-#     await callback_query.message.answer(f'Напишите причину, почему данное объвление не прошло модерацию')
-#
-#
-# @router.message(
-#     RGProcessState.process_unchecked
-# )
-# async def moderate_ad_unchecked(message: types.Message, state: FSMContext):
-#     data = await state.get_data()
-#     realtor_data = data['realtor_data']
-#     text = message.text
-#     await bot.send_message(chat_id=f'@{realtor_data["username"]}', text=text)
-#
-#
-#
+
+
+    print(state_data)

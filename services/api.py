@@ -72,12 +72,21 @@ class UserAPIService(ApiService):
         return self.get(endpoint, **kwargs)
 
 
+
+class AdvertisementModerationAPIService(ApiService):
+    def get_realtor_advertisements(self, realtor_id: int, **kwargs) -> list:
+        url = f'{settings.API_URL}/users/{realtor_id}/moderation_advertisements/'
+        return self.get(url, **kwargs)
+
+
+
 class APIManager(ApiService):
     def __init__(self):
         self.category_service: CategoryAPIService = CategoryAPIService()
         self.district_service: DistrictAPIService = DistrictAPIService()
         self.advertiser_service: AdvertisementAPIService = AdvertisementAPIService()
         self.user_service: UserAPIService = UserAPIService()
+        self.moderation: AdvertisementModerationAPIService = AdvertisementModerationAPIService()
 
 
 api_manager = APIManager()
