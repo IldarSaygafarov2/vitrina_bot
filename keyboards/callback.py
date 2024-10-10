@@ -122,3 +122,25 @@ def process_update_advertisement_kb(adv_id: int):
     return kb.as_markup()
 
 
+def advertisement_fields_for_update_kb(adv_id: int):
+    kb = InlineKeyboardBuilder()
+    fields = [
+        ('title', 'Название'),
+        ('operation_type', 'Тип операции'),
+        ('description', 'Описание'),
+        ('district', 'Район'),
+        ('address', 'Адрес'),
+        ('property_category', 'Категория недвижимости'),
+        ('property_type', 'Тип недвижимости'),
+        ('price', 'Цена'),
+        ('quadrature_from', 'Квадратура от'),
+        ('quadrature_to', 'Квадратура до'),
+        ('creation_date', 'Дата постройки'),
+        ('rooms_from', 'Кол-во комнат от'),
+        ('rooms_to', 'Кол-во комнат до'),
+        ('floor_from', 'Этаж от'),
+        ('floor_to', 'Этаж до'),
+        ('repair_type', 'Тип ремонта'),
+        ('house_quadrature', 'Площадь дома'),
+        ('is_studio', 'Студия'),
+    ]
