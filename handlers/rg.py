@@ -1,8 +1,7 @@
-from settings import BASE_DIR
 from aiogram import types, Router, F
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
-from utils.advertisements import save_advertisements_photos
+
 from filters.rg import GroupDirectorFilter
 from keyboards import callback
 from keyboards.callback import ads_moderation_kb
@@ -14,8 +13,9 @@ from templates.alert_texts import (
 )
 from templates.rg_texts import (
     rg_welcome_text, rg_list_text, rg_advertisements_type_text, rg_checked_advertisements_text,
-    rg_unchecked_advertisements_text, rg_advertisement_moderation_complete_text, rg_advertisement_decline_reason_text
+    rg_advertisement_moderation_complete_text, rg_advertisement_decline_reason_text
 )
+from utils.advertisements import save_advertisements_photos
 
 router = Router(name='rg_user')
 

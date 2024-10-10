@@ -114,3 +114,11 @@ def realtors_ads_kb(realtor_id: int):
     kb.button(text='Непроверенные', callback_data=f'unchecked_ads:{realtor_id}')
     kb.adjust()
     return kb.as_markup()
+
+
+def process_update_advertisement_kb(adv_id: int):
+    kb = InlineKeyboardBuilder()
+    kb.button(text='Редактировать объявление', callback_data=f'update_advertisement:{adv_id}')
+    return kb.as_markup()
+
+

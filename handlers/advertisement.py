@@ -9,7 +9,7 @@ from filters.realtor import RealtorFilter
 from keyboards import callback as callback_kb
 from keyboards import reply as kb
 from services.api import api_manager
-from services.utils import get_repair_type_by_name, get_property_type
+from services.utils import get_repair_type_by_name, get_property_type, create_advertisement_message
 from states.custom_states import AdvertisementState
 from templates import advertisements_texts as adv_texts
 
@@ -408,16 +408,40 @@ async def process_repair(message: types.Message, state: FSMContext):
     RealtorFilter()
 )
 async def process_realtor_advertisements(
-        message: types.Message
+        message: types.Message,
+        state: FSMContext
 ):
+
     user_id = api_manager.user_service.get_user_id(
         tg_username=message.from_user.username
     ).get('id')
 
-    await message.answer(
-        text=adv_texts.realtor_choose_advertisements_type_text(),
-        reply_markup=callback_kb.realtors_ads_kb(realtor_id=user_id)
-    )
+    user_advertisements = api_manager.user_service.get_user_advertisements(user_id=user_id)
+
+    for user_advertisement in user_advertisements:
+        await message.answer(
+            text=create_advertisement_message(user_advertisement),
+            reply_markup=callback_kb.process_update_advertisement_kb(
+                adv_id=user_advertisement['id']
+            )
+        )
+
+
+@router.callback_query(F.data.startswith('update_advertisement'))
+async def update_advertisement(
+        call: types.CallbackQuery,
+        state: FSMContext
+):
+    await call.answer()
+    adv_id = int(call.data.split(':')[-1])
+    print('process update advertisement with id', adv_id)
+
+
+
+    # await message.answer(
+    #     text=adv_texts.realtor_choose_advertisements_type_text(),
+    #     reply_markup=callback_kb.realtors_ads_kb(realtor_id=user_id)
+    # )
 
 
 

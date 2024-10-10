@@ -5,7 +5,6 @@ class AdvertisementState(StatesGroup):
     operation_type = State()
     property_category = State()
 
-
     photos = State()
     photos_number = State()
     title = State()
