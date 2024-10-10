@@ -67,7 +67,7 @@ def realtor_is_property_studio_text():
 
 
 def realtor_quadrature_text():
-    return "Укажите квадратуру: "
+    return ""
 
 
 def realtor_rooms_from_to_text(is_from: bool):
@@ -95,7 +95,7 @@ def realtor_advertisement_repair_type_text():
 def realtor_advertisement_completed_text(**kwargs):
     rooms_from_to = f'<b>Кол-во комнат</b> от <i>{kwargs["rooms_from"]}</i> до <i>{kwargs["rooms_to"]}</i>'
     creation_year = f'\n<b>Год постройки: </b><i>{kwargs["creation_date"]}</i>' if kwargs["creation_date"] else ''
-    house_quadrature = f'\n<b>Общая площадь участка: </b>{kwargs[""]}' if kwargs["house_quadrature"] else ''
+    house_quadrature = f'\n<b>Общая площадь участка: </b>{kwargs["house_quadrature"]}' if kwargs["house_quadrature"] else ''
 
     return f"""
 <b>Заголовок: </b><i>{kwargs["title"]}</i>

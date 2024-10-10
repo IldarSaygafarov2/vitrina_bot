@@ -11,10 +11,7 @@ from keyboards import reply as kb
 from services.api import api_manager
 from services.utils import get_repair_type_by_name, get_property_type
 from states.custom_states import AdvertisementState
-
 from templates import advertisements_texts as adv_texts
-# from templates import alert_texts
-
 
 router = Router(name='advertisement')
 
@@ -30,18 +27,18 @@ async def cmd_start(message: types.Message):
 
 @router.message(F.text.lower() == 'создать объявление')
 async def start_creating_ad(message: types.Message, state: FSMContext):
-    await state.set_state(AdvertisementState.main_categories)
+    await state.set_state(AdvertisementState.operation_type)
     await message.answer(
         text=adv_texts.realtor_operation_type_text(),
         reply_markup=kb.main_categories_kb()
     )
 
 
-@router.message(AdvertisementState.main_categories)
+@router.message(AdvertisementState.operation_type)
 async def process_main_categories(message: types.Message, state: FSMContext):
     categories = api_manager.category_service.get_categories()
-    await state.update_data(main_categories=message.text)
-    await state.set_state(AdvertisementState.property_categories)
+    await state.update_data(operation_type=message.text)
+    await state.set_state(AdvertisementState.property_category)
     await message.answer(
         text=adv_texts.realtor_property_category_text(),
         reply_markup=callback_kb.property_categories_kb(categories)
@@ -49,12 +46,12 @@ async def process_main_categories(message: types.Message, state: FSMContext):
 
 
 @router.callback_query(F.data.contains('property_category'))
-@router.message(AdvertisementState.property_categories)
+@router.message(AdvertisementState.property_category)
 async def process_photos_qty(callback: types.CallbackQuery, state: FSMContext):
     _, category_slug = callback.data.split(':')
     category = api_manager.category_service.get_category(category_slug)
 
-    await state.update_data(property_categories=category)
+    await state.update_data(property_category=category)
     await state.set_state(AdvertisementState.photos_number)
     await callback.message.answer(
         text=adv_texts.realtor_selected_property_category_text(
@@ -107,12 +104,14 @@ async def process_description(message: types.Message, state: FSMContext):
     )
 
 
-@router.callback_query(F.data.contains('district'))
-@router.message(AdvertisementState.district)
+# @router.message(AdvertisementState.district)
+@router.callback_query(AdvertisementState.district, F.data.contains('district'))
 async def process_district(callback: types.CallbackQuery, state: FSMContext):
-    _, district_slug = callback.data.split('_')
     data = await state.get_data()
+
+    _, district_slug = callback.data.split('_')
     district = api_manager.district_service.get_district(district_slug)
+
     await state.update_data(district=district)
     await callback.message.answer(
         text=adv_texts.realtor_chosen_district_text(
@@ -120,8 +119,8 @@ async def process_district(callback: types.CallbackQuery, state: FSMContext):
         )
     )
 
-    property_data = data['property_categories']['slug']
-    if property_data == 'doma':
+    property_category = data['property_category']['slug']
+    if property_category == 'doma':
         await state.set_state(AdvertisementState.house_quadrature)
         await callback.message.answer(
             text=adv_texts.realtor_full_quadrature_of_house()
@@ -135,7 +134,6 @@ async def process_district(callback: types.CallbackQuery, state: FSMContext):
 
 @router.message(AdvertisementState.house_quadrature)
 async def process_house_quadrature(message: types.Message, state: FSMContext):
-    data = await state.get_data()
     await state.update_data(house_quadrature=int(message.text))
     await state.set_state(AdvertisementState.address)
     await message.answer(
@@ -145,6 +143,17 @@ async def process_house_quadrature(message: types.Message, state: FSMContext):
 
 @router.message(AdvertisementState.address)
 async def process_address(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    # property_category = data['property_category']['slug']
+    #
+    # if property_category == 'doma':
+    #     await state.update_data(property_type='Вторичный фонд', address=message.text)
+    #     await state.set_state(AdvertisementState.price)
+    #     return await message.answer(
+    #         text=adv_texts.realtor_price_text(),
+    #         reply_markup=types.ReplyKeyboardRemove()
+    #     )
+
     await state.update_data(address=message.text)
     await state.set_state(AdvertisementState.property_type)
     await message.answer(
@@ -192,8 +201,20 @@ async def process_price(message: types.Message, state: FSMContext):
 
 @router.message(AdvertisementState.auction_allowed)
 async def process_auction_allowed(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    property_category = data['property_category']['slug']
+
     is_allowed = True if message.text == 'Да' else False
     await state.update_data(auction_allowed=is_allowed)
+
+    if property_category == 'doma':
+        await state.set_state(AdvertisementState.rooms_from)
+        return await message.answer(
+            text=adv_texts.realtor_rooms_from_to_text(
+                is_from=True
+            )
+        )
+
     await state.set_state(AdvertisementState.is_studio)
     await message.answer(
         text=adv_texts.realtor_is_property_studio_text(),
@@ -207,14 +228,14 @@ async def process_is_studio(message: types.Message, state: FSMContext):
         await state.update_data(is_studio=True)
         await state.set_state(AdvertisementState.quadrature_from)
         await message.answer(
-            text=adv_texts.realtor_quadrature_text()
+            text=adv_texts.realtor_quadrature_from_to_text(is_from=True)
         )
     else:
         await state.update_data(is_studio=False)
         await state.set_state(AdvertisementState.rooms_from)
         await message.answer(
             text=adv_texts.realtor_rooms_from_to_text(
-                is_from=False
+                is_from=True
             )
         )
 
@@ -225,7 +246,7 @@ async def process_rooms(message: types.Message, state: FSMContext):
     await state.set_state(AdvertisementState.rooms_to)
     await message.answer(
         text=adv_texts.realtor_rooms_from_to_text(
-            is_from=True
+            is_from=False
         )
     )
 
@@ -281,8 +302,8 @@ async def process_repair(message: types.Message, state: FSMContext):
     data = await state.get_data()
     title = data.get('title')
     is_allowed = data.get('auction_allowed')
-    property_category = data.get('property_categories')
-    main_category = data.get('main_categories')
+    property_category = data.get('property_category')
+    operation_type = data.get('operation_type')
     description = data.get('full_description')
     district = data.get('district')
     property_type = data.get('property_type')
@@ -313,7 +334,7 @@ async def process_repair(message: types.Message, state: FSMContext):
     user_id = api_manager.user_service.get_user_id(username)
     msg = adv_texts.realtor_advertisement_completed_text(
         title=title,
-        operation_type=main_category,
+        operation_type=operation_type,
         description=description,
         district=district['name'],
         address=address,

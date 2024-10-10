@@ -125,6 +125,8 @@ async def show_unchecked_ads(
     #     for photo in advertisement_photos
     # ]
 
+
+
     await state.update_data(advertisement=advertisement)
     await call.message.edit_text(
         text=create_advertisement_message(advertisement),
@@ -145,9 +147,7 @@ async def show_checked_ads(
 
     advertisement = api_manager.advertiser_service.get_one(advertisement_id=adv_id)
 
-    advertisement_gallery = [obj.get('photo') for obj in advertisement.get('gallery')]
-
-    print(advertisement_gallery)
+    advertisement_photos = [obj.get('photo') for obj in advertisement.get('gallery')]
 
     await state.update_data(advertisement=advertisement)
     await call.message.edit_text(
