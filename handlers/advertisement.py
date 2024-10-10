@@ -419,6 +419,7 @@ async def process_realtor_advertisements(
     user_advertisements = api_manager.user_service.get_user_advertisements(user_id=user_id)
 
     for user_advertisement in user_advertisements:
+        await state.update_data({str(user_advertisement['id']): user_advertisement})
         await message.answer(
             text=create_advertisement_message(user_advertisement),
             reply_markup=callback_kb.process_update_advertisement_kb(
@@ -433,8 +434,16 @@ async def update_advertisement(
         state: FSMContext
 ):
     await call.answer()
+    state_data = await state.get_data()
+
     adv_id = int(call.data.split(':')[-1])
-    print('process update advertisement with id', adv_id)
+
+    advertisement = state_data.get(str(adv_id))
+    print(advertisement)
+
+
+
+
 
 
 
