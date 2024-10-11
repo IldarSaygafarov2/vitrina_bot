@@ -1,5 +1,6 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+
 from settings import KB_FIELDS
 
 
@@ -121,7 +122,6 @@ def realtors_ads_kb(realtor_id: int):
 #     kb = InlineKeyboardBuilder()
 #     kb.button(text='Редактировать объявление', callback_data=f'update_advertisement:{adv_id}')
 #     return kb.as_markup()
-
 
 
 def advertisements_for_update_kb(advertisements: list):
