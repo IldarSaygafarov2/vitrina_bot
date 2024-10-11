@@ -1,7 +1,7 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from settings import KB_FIELDS
+from settings import KB_FIELDS, OPERATION_TYPES, REPAIR_TYPES, PROPERTY_TYPES
 
 
 def realtor_start_kb():
@@ -30,22 +30,30 @@ def group_director_kb():
     return kb.as_markup()
 
 
-def districts_kb(districts: list) -> InlineKeyboardMarkup:
-    kb = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(text=district['name'], callback_data=f'district_{district["slug"]}')
-            ] for district in districts
-        ]
-    )
-    return kb
+def districts_kb(districts: list, callback_data: str | None = None) -> InlineKeyboardMarkup:
+    kb = InlineKeyboardBuilder()
+    for district in districts:
+        kb.button(text=district['name'], callback_data=f'district_{district["slug"]}')
+    kb.adjust(1)
+    if callback_data is not None:
+        kb.row(InlineKeyboardButton(text='Назад', callback_data=callback_data))
+    return kb.as_markup()
 
 
-def property_categories_kb(categories: list) -> InlineKeyboardMarkup:
+def property_categories_kb(
+        categories: list,
+        callback_data: str | None = None,
+        additional_callback: str = ''
+) -> InlineKeyboardMarkup:
     kb = InlineKeyboardBuilder()
     for category in categories:
-        kb.button(text=category.get('name'), callback_data=f'property_category:{category["slug"]}')
+        kb.button(
+            text=category.get('name'),
+            callback_data=f'{additional_callback}_property_category:{category["slug"]}'
+        )
     kb.adjust(2)
+    if callback_data is not None:
+        kb.row(InlineKeyboardButton(text='Назад', callback_data=callback_data))
     return kb.as_markup()
 
 
@@ -117,6 +125,7 @@ def realtors_ads_kb(realtor_id: int):
     kb.adjust()
     return kb.as_markup()
 
+
 #
 # def process_update_advertisement_kb(adv_id: int):
 #     kb = InlineKeyboardBuilder()
@@ -128,7 +137,7 @@ def advertisements_for_update_kb(advertisements: list):
     kb = InlineKeyboardBuilder()
     for idx, advertisement in enumerate(advertisements, start=1):
         advertisement_name = advertisement.get('name')
-        advertisement_name = f'{idx}. {advertisement_name}' if advertisement_name else  f'Обявление №{idx}'
+        advertisement_name = f'{idx}. {advertisement_name}' if advertisement_name else f'Обявление №{idx}'
         kb.button(
             text=advertisement_name,
             callback_data=f'advertisement_update:{advertisement["id"]}'
@@ -148,4 +157,34 @@ def advertisement_fields_for_update_kb(adv_id: int):
     kb.row(
         InlineKeyboardButton(text='Назад', callback_data='back_to_ads')
     )
+    return kb.as_markup()
+
+
+def operation_type_kb(callback_data: str | None = None):
+    kb = InlineKeyboardBuilder()
+    for operation_type, operation_value in OPERATION_TYPES.items():
+        kb.button(text=operation_value, callback_data=f'update_operation_type:{operation_type}')
+    kb.adjust(2)
+    if callback_data is not None:
+        kb.row(InlineKeyboardButton(text='Назад', callback_data=callback_data))
+    return kb.as_markup()
+
+
+def advertisement_repair_type_kb(callback_data: str | None = None):
+    kb = InlineKeyboardBuilder()
+    for key, value in REPAIR_TYPES.items():
+        kb.button(text=value, callback_data=f'update_repair_type:{key}')
+    kb.adjust(1)
+    if callback_data is not None:
+        kb.row(InlineKeyboardButton(text='Назад', callback_data=callback_data))
+    return kb.as_markup()
+
+
+def property_type_kb(callback_data: str | None = None):
+    kb = InlineKeyboardBuilder()
+    for key, value in PROPERTY_TYPES.items():
+        kb.button(text=value, callback_data=f'update_property_type:{key}')
+    kb.adjust(2)
+    if callback_data is not None:
+        kb.row(InlineKeyboardButton(text='Назад', callback_data=callback_data))
     return kb.as_markup()

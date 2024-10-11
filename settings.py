@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 
 API_URL = 'http://127.0.0.1:8000/api/v1'
@@ -29,3 +28,30 @@ KB_FIELDS = [
     ('update_is_studio', 'Студия'),
 ]
 KB_FIELDS = {item[0]: item[1] for item in KB_FIELDS}
+
+OPERATION_TYPES = {
+    'rent': 'Аренда',
+    'buy': 'Покупка'
+}
+
+ADVERTISEMENT_RANGE_FIELDS = {
+    'quadrature_from': 'Квадратура от',
+    'quadrature_to': 'Квадратура до',
+    'rooms_qty_from': 'Кол-во комнат от',
+    'rooms_qty_to': 'Кол-во комнат до',
+    'floor_from': 'Этаж от',
+    'floor_to': 'Этаж до'
+}
+
+REPAIR_TYPES = {
+    "with": "С ремонтом",
+    "without": "Без ремонта",
+    "designed": "Дизайнерский ремонт",
+    "rough": "Черновая",
+    "pre_finished": "Предчистовая",
+}
+
+PROPERTY_TYPES = {
+    'new': 'Новостройка',
+    'old': 'Вторичный фонд'
+}

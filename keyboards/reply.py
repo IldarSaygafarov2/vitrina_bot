@@ -23,15 +23,6 @@ def main_categories_kb():
     return markup
 
 
-def districts_kb():
-    districts = api_manager.district_service.get_districts()
-    reply_builder = ReplyKeyboardMarkup(
-        resize_keyboard=True,
-        one_time_keyboard=True,
-        keyboard=[
-            [KeyboardButton(text=district['name'])] for district in districts
-        ])
-    return reply_builder
 
 
 def property_type_kb():

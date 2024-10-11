@@ -132,3 +132,4 @@ def realtor_advertisement_editing_text(data):
             f"<b>{current_value}</b>\n\n"
             "Введите новое значение: "
             )
+
