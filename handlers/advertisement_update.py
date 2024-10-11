@@ -4,10 +4,7 @@ from aiogram.fsm.context import FSMContext
 from keyboards import callback as callback_kb
 from services.api import api_manager
 from services.utils import create_advertisement_message
-from settings import KB_FIELDS
 from states.custom_states import AdvertisementEditingState
-from templates.advertisements_texts import realtor_advertisement_editing_text
-from templates.alert_texts import value_is_same_as_old_alert
 
 router = Router()
 
@@ -41,6 +38,60 @@ ADVERTISEMENT_RANGE_FIELDS = {
     'floor_from': 'Этаж от',
     'floor_to': 'Этаж до'
 }
+
+
+@router.callback_query(
+    F.data.startswith('field_update')
+)
+async def update_advertisement_editing(
+        call: types.CallbackQuery,
+        state: FSMContext
+):
+    await call.answer()
+
+    state_data = await state.get_data()
+
+    _, advertisement_id, field = call.data.split(':')
+    advertisement = state_data.get('for_update')
+
+    if field == 'update_name':
+        await call.message.edit_text(
+            text=f'Текущее название:\n'
+                 f'<b>{advertisement["name"]}</b>\n\n'
+                 f'Напишите новое название:'
+        )
+    elif field == 'update_operation_type':
+        pass
+    elif field == 'update_operation_type':
+        pass
+    elif field == 'update_gallery':
+        pass
+    elif field == 'update_description':
+        pass
+    elif field == 'update_district':
+        pass
+    elif field == 'update_address':
+        pass
+    elif field == 'update_property_category':
+        pass
+    elif field == 'update_property_type':
+        pass
+    elif field == 'update_price':
+        pass
+    elif field == 'update_quadrature':
+        pass
+    elif field == 'update_creation_date':
+        pass
+    elif field == 'update_rooms':
+        pass
+    elif field == 'update_floor':
+        pass
+    elif field == 'update_repair_type':
+        pass
+    elif field == 'update_house_quadrature':
+        pass
+    elif field == 'update_is_studio':
+        pass
 
 
 # @router.callback_query(
