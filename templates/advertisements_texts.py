@@ -121,3 +121,14 @@ def realtor_choose_action_below_text():
     return "Выберите действие ниже: "
 
 
+def realtor_advertisement_editing_text(data):
+
+    field_names = list(data.keys())
+    field_values = list(data.values())
+    current_value = '\n'.join(list(map(lambda field_name, field_value: f'{field_name}: {field_value}',
+                                       field_names, field_values)))
+
+    return (f"Выбранное поле для обновления:\n"
+            f"<b>{current_value}</b>\n\n"
+            "Введите новое значение: "
+            )

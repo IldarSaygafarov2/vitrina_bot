@@ -9,8 +9,8 @@ from filters.realtor import RealtorFilter
 from keyboards import callback as callback_kb
 from keyboards import reply as kb
 from services.api import api_manager
-from services.utils import get_repair_type_by_name, get_property_type, create_advertisement_message
-from states.custom_states import AdvertisementState
+from services.utils import get_repair_type_by_name, get_property_type
+from states.custom_states import AdvertisementState, AdvertisementEditingState
 from templates import advertisements_texts as adv_texts
 
 router = Router(name='advertisement')
@@ -45,7 +45,7 @@ async def process_main_categories(message: types.Message, state: FSMContext):
     )
 
 
-@router.callback_query(F.data.contains('property_category'))
+@router.callback_query(F.data.startswith('property_category'))
 @router.message(AdvertisementState.property_category)
 async def process_photos_qty(callback: types.CallbackQuery, state: FSMContext):
     _, category_slug = callback.data.split(':')
@@ -105,7 +105,7 @@ async def process_description(message: types.Message, state: FSMContext):
 
 
 # @router.message(AdvertisementState.district)
-@router.callback_query(AdvertisementState.district, F.data.contains('district'))
+@router.callback_query(AdvertisementState.district, F.data.startswith('district'))
 async def process_district(callback: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
 
@@ -411,82 +411,15 @@ async def process_realtor_advertisements(
         message: types.Message,
         state: FSMContext
 ):
-
     user_id = api_manager.user_service.get_user_id(
         tg_username=message.from_user.username
     ).get('id')
 
     user_advertisements = api_manager.user_service.get_user_advertisements(user_id=user_id)
 
-    for user_advertisement in user_advertisements:
-        await state.update_data({str(user_advertisement['id']): user_advertisement})
-        await message.answer(
-            text=create_advertisement_message(user_advertisement),
-            reply_markup=callback_kb.process_update_advertisement_kb(
-                adv_id=user_advertisement['id']
-            )
-        )
+    await state.set_state(AdvertisementEditingState.start)
 
-
-@router.callback_query(F.data.startswith('update_advertisement'))
-async def update_advertisement(
-        call: types.CallbackQuery,
-        state: FSMContext
-):
-    await call.answer()
-    state_data = await state.get_data()
-
-    adv_id = int(call.data.split(':')[-1])
-
-    advertisement = state_data.get(str(adv_id))
-    print(advertisement)
-
-
-
-
-
-
-
-    # await message.answer(
-    #     text=adv_texts.realtor_choose_advertisements_type_text(),
-    #     reply_markup=callback_kb.realtors_ads_kb(realtor_id=user_id)
-    # )
-
-
-
-# @router.message(F.text.lower() == 'мои объявления')
-# async def realtors_advertisements(message: types.Message, state: FSMContext):
-#     await message.answer(
-#         choose_one_below_text(),
-#         reply_markup=kb.ad_moderated_kb()
-#     )
-#
-#
-# @router.message(F.text.lower() == 'проверенные')
-# async def realtors_moderated_ads(message: types.Message, state: FSMContext):
-#     username = message.from_user.username
-#     user_id = api_manager.user_service.get_user_id(username)
-#     advertisements = api_manager.user_service.get_user_advertisements(
-#         user_id=user_id['id'],
-#         params={'is_moderated': True}
-#     )
-#     msg = total_checked_or_unchecked_advertisements_text(advertisements, is_checked=True)
-#     await message.answer(msg)
-#     for advertisement in advertisements:
-#         adv_msg = create_advertisement_message(advertisement)
-#         await message.answer(adv_msg)
-#
-#
-# @router.message(F.text.lower() == 'непроверенные')
-# async def realtors_moderated_ads(message: types.Message, state: FSMContext):
-#     username = message.from_user.username
-#     user_id = api_manager.user_service.get_user_id(username)
-#     advertisements = api_manager.user_service.get_user_advertisements(
-#         user_id=user_id['id'],
-#         params={'is_moderated': False}
-#     )
-#     msg = total_checked_or_unchecked_advertisements_text(advertisements, is_checked=False)
-#     await message.answer(msg)
-#     for advertisement in advertisements:
-#         adv_msg = create_advertisement_message(advertisement)
-#         await message.answer(adv_msg)
+    await message.answer(
+        f'Выберите объвяление, которое хотите отредактировать: ',
+        reply_markup=callback_kb.advertisements_for_update_kb(advertisements=user_advertisements)
+    )

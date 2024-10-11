@@ -116,16 +116,36 @@ def realtors_ads_kb(realtor_id: int):
     kb.adjust()
     return kb.as_markup()
 
+#
+# def process_update_advertisement_kb(adv_id: int):
+#     kb = InlineKeyboardBuilder()
+#     kb.button(text='Редактировать объявление', callback_data=f'update_advertisement:{adv_id}')
+#     return kb.as_markup()
 
-def process_update_advertisement_kb(adv_id: int):
+
+
+def advertisements_for_update_kb(advertisements: list):
     kb = InlineKeyboardBuilder()
-    kb.button(text='Редактировать объявление', callback_data=f'update_advertisement:{adv_id}')
+    for idx, advertisement in enumerate(advertisements, start=1):
+        advertisement_name = advertisement.get('name')
+        advertisement_name = f'{idx}. {advertisement_name}' if advertisement_name else  f'Обявление №{idx}'
+        kb.button(
+            text=advertisement_name,
+            callback_data=f'advertisement_update:{advertisement["id"]}'
+        )
+    kb.adjust(1)
+    kb.row(
+        InlineKeyboardButton(text='На главную', callback_data='realtor_start_menu')
+    )
     return kb.as_markup()
 
 
 def advertisement_fields_for_update_kb(adv_id: int):
     kb = InlineKeyboardBuilder()
-    for call, field in KB_FIELDS:
-        kb.button(text=field, callback_data=f'field_update:{adv_id}')
-    kb.adjust(1)
+    for call, field in KB_FIELDS.items():
+        kb.button(text=field, callback_data=f'field_update:{adv_id}:{call}')
+    kb.adjust(2)
+    kb.row(
+        InlineKeyboardButton(text='Назад', callback_data='back_to_ads')
+    )
     return kb.as_markup()

@@ -33,3 +33,8 @@ class RGProcessState(StatesGroup):
     process_checked = State()
     process_unchecked = State()
 
+
+class AdvertisementEditingState(StatesGroup):
+    start = State()
+    process = State()
+    check = State()

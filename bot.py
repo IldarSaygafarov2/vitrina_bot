@@ -3,13 +3,11 @@ import logging
 import sys
 
 from data.loader import bot, dp
-from handlers import advertisement, simple_user, rg
+from handlers import routers_list
 
 
 async def main():
-    dp.include_router(rg.router)
-    dp.include_router(advertisement.router)
-    dp.include_router(simple_user.router)
+    dp.include_routers(*routers_list)
     await dp.start_polling(bot)
 
 
