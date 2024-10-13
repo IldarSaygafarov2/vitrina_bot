@@ -48,6 +48,8 @@ async def process_main_categories(message: types.Message, state: FSMContext):
 @router.callback_query(F.data.startswith('property_category'))
 @router.message(AdvertisementState.property_category)
 async def process_photos_qty(callback: types.CallbackQuery, state: FSMContext):
+    await callback.answer()
+
     _, category_slug = callback.data.split(':')
     category = api_manager.category_service.get_category(category_slug)
 
@@ -107,6 +109,8 @@ async def process_description(message: types.Message, state: FSMContext):
 # @router.message(AdvertisementState.district)
 @router.callback_query(AdvertisementState.district, F.data.startswith('district'))
 async def process_district(callback: types.CallbackQuery, state: FSMContext):
+    await callback.answer()
+
     data = await state.get_data()
 
     _, district_slug = callback.data.split('_')
@@ -121,9 +125,9 @@ async def process_district(callback: types.CallbackQuery, state: FSMContext):
 
     property_category = data['property_category']['slug']
     if property_category == 'doma':
-        await state.set_state(AdvertisementState.house_quadrature)
+        await state.set_state(AdvertisementState.house_quadrature_from)
         await callback.message.answer(
-            text=adv_texts.realtor_full_quadrature_of_house()
+            text=adv_texts.realtor_quadrature_of_house_from()
         )
     else:
         await state.set_state(AdvertisementState.address)
@@ -132,9 +136,18 @@ async def process_district(callback: types.CallbackQuery, state: FSMContext):
         )
 
 
-@router.message(AdvertisementState.house_quadrature)
-async def process_house_quadrature(message: types.Message, state: FSMContext):
-    await state.update_data(house_quadrature=int(message.text))
+@router.message(AdvertisementState.house_quadrature_from)
+async def process_house_quadrature_from(message: types.Message, state: FSMContext):
+    await state.update_data(house_quadrature_from=int(message.text))
+    await state.set_state(AdvertisementState.house_quadrature_to)
+    await message.answer(
+        text=adv_texts.realtor_quadrature_of_house_to()
+    )
+
+
+@router.message(AdvertisementState.house_quadrature_to)
+async def process_house_quadrature_to(message: types.Message, state: FSMContext):
+    await state.update_data(house_quadrature_to=int(message.text))
     await state.set_state(AdvertisementState.address)
     await message.answer(
         text=adv_texts.realtor_correct_address_text()
@@ -143,17 +156,6 @@ async def process_house_quadrature(message: types.Message, state: FSMContext):
 
 @router.message(AdvertisementState.address)
 async def process_address(message: types.Message, state: FSMContext):
-    data = await state.get_data()
-    # property_category = data['property_category']['slug']
-    #
-    # if property_category == 'doma':
-    #     await state.update_data(property_type='Вторичный фонд', address=message.text)
-    #     await state.set_state(AdvertisementState.price)
-    #     return await message.answer(
-    #         text=adv_texts.realtor_price_text(),
-    #         reply_markup=types.ReplyKeyboardRemove()
-    #     )
-
     await state.update_data(address=message.text)
     await state.set_state(AdvertisementState.property_type)
     await message.answer(
@@ -318,7 +320,8 @@ async def process_repair(message: types.Message, state: FSMContext):
     is_studio = data.get('is_studio')
     creation_date = data.get('creation_date')
     address = data.get('address')
-    house_quadrature = data.get('house_quadrature')
+    house_quadrature_from = data.get('house_quadrature_from')
+    house_quadrature_to = data.get('house_quadrature_to')
     file_names = []
 
     for photo in data['photos']:
@@ -332,6 +335,7 @@ async def process_repair(message: types.Message, state: FSMContext):
 
     username = message.from_user.username
     user_id = api_manager.user_service.get_user_id(username)
+
     msg = adv_texts.realtor_advertisement_completed_text(
         title=title,
         operation_type=operation_type,
@@ -349,7 +353,8 @@ async def process_repair(message: types.Message, state: FSMContext):
         floor_from=floor_from,
         floor_to=floor_to,
         repair_type=repair_type,
-        house_quadrature=house_quadrature,
+        house_quadrature_from=house_quadrature_from,
+        house_quadrature_to=house_quadrature_to,
         is_studio=is_studio,
     )
 
@@ -375,12 +380,13 @@ async def process_repair(message: types.Message, state: FSMContext):
             "auction_allowed": is_allowed,
             "category": property_category['id'],
             'repair_type': repair_type_choice,
-            'house_quadrature': house_quadrature,
+            'house_quadrature_from': house_quadrature_from,
+            'house_quadrature_to': house_quadrature_to,
             'is_studio': is_studio,
             'user': user_id['id'],
         },
     )
-
+    print(new)
     media_files = os.listdir('photos')
     for media_file in media_files:
         if media_file not in file_names:

@@ -69,7 +69,7 @@ def update_quadrature_text(quadrature_from: int, quadrature_to: str):
 
 Укажите новые значения через запятую, важно соблюдать правильный порядок:
 
-<code>40, 50</code>
+<code>40,50</code>
 """
 
 
@@ -81,7 +81,7 @@ def update_rooms_text(rooms_from: int, rooms_to: int):
 
 Укажите новые значения через запятую, важно соблюдать правильный порядок:
 
-<code>3, 5</code> 
+<code>3,5</code> 
 """
 
 
@@ -93,7 +93,7 @@ def update_floor_text(floor_from: int, floor_to: int):
 
 Укажите новые значения через запятую, важно соблюдать правильный порядок:
 
-<code>3, 5</code> 
+<code>3,5</code> 
 """
 
 
@@ -121,4 +121,14 @@ def update_property_type_text(property_type: str):
 <b><i>{property_type}</i></b>
 
 Новый тип недвижимости:
+"""
+
+
+def update_is_studio_text(is_studio: bool):
+    text = 'Да' if is_studio else 'Нет'
+    return f"""
+Текущее значение:
+<b><i>{text}</i></b>
+
+Укажите новое значение:    
 """

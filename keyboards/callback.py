@@ -49,7 +49,7 @@ def property_categories_kb(
     for category in categories:
         kb.button(
             text=category.get('name'),
-            callback_data=f'{additional_callback}_property_category:{category["slug"]}'
+            callback_data=f'{additional_callback}property_category:{category["slug"]}'
         )
     kb.adjust(2)
     if callback_data is not None:
@@ -126,13 +126,6 @@ def realtors_ads_kb(realtor_id: int):
     return kb.as_markup()
 
 
-#
-# def process_update_advertisement_kb(adv_id: int):
-#     kb = InlineKeyboardBuilder()
-#     kb.button(text='Редактировать объявление', callback_data=f'update_advertisement:{adv_id}')
-#     return kb.as_markup()
-
-
 def advertisements_for_update_kb(advertisements: list):
     kb = InlineKeyboardBuilder()
     for idx, advertisement in enumerate(advertisements, start=1):
@@ -160,31 +153,25 @@ def advertisement_fields_for_update_kb(adv_id: int):
     return kb.as_markup()
 
 
-def operation_type_kb(callback_data: str | None = None):
+def advertisement_choices_kb(choice_type: str, callback_for_return: str | None = None, **kwargs):
     kb = InlineKeyboardBuilder()
-    for operation_type, operation_value in OPERATION_TYPES.items():
-        kb.button(text=operation_value, callback_data=f'update_operation_type:{operation_type}')
+
+    prefix = 'update_'
+
+    if choice_type == 'repair_type':
+        for key, value in REPAIR_TYPES.items():
+            kb.button(text=value, callback_data=f'{prefix}{choice_type}:{key}:{kwargs["adv_id"]}')
+    elif choice_type == 'property_type':
+        for key, value in PROPERTY_TYPES.items():
+            kb.button(text=value, callback_data=f'{prefix}{choice_type}:{key}:{kwargs["adv_id"]}')
+    elif choice_type == 'operation_type':
+        for key, value in OPERATION_TYPES.items():
+            kb.button(text=value, callback_data=f'{prefix}{choice_type}:{key}:{kwargs["adv_id"]}')
+
     kb.adjust(2)
-    if callback_data is not None:
-        kb.row(InlineKeyboardButton(text='Назад', callback_data=callback_data))
+    if callback_for_return is not None:
+        kb.row(InlineKeyboardButton(text='Назад', callback_data=callback_for_return))
+
     return kb.as_markup()
 
 
-def advertisement_repair_type_kb(callback_data: str | None = None):
-    kb = InlineKeyboardBuilder()
-    for key, value in REPAIR_TYPES.items():
-        kb.button(text=value, callback_data=f'update_repair_type:{key}')
-    kb.adjust(1)
-    if callback_data is not None:
-        kb.row(InlineKeyboardButton(text='Назад', callback_data=callback_data))
-    return kb.as_markup()
-
-
-def property_type_kb(callback_data: str | None = None):
-    kb = InlineKeyboardBuilder()
-    for key, value in PROPERTY_TYPES.items():
-        kb.button(text=value, callback_data=f'update_property_type:{key}')
-    kb.adjust(2)
-    if callback_data is not None:
-        kb.row(InlineKeyboardButton(text='Назад', callback_data=callback_data))
-    return kb.as_markup()

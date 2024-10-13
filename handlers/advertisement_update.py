@@ -1,4 +1,3 @@
-from pprint import pprint
 from aiogram import Router, F, types
 from aiogram.fsm.context import FSMContext
 
@@ -6,11 +5,7 @@ from keyboards import callback as callback_kb
 from services.api import api_manager
 from services.utils import create_advertisement_message
 from states.custom_states import AdvertisementEditingState, AdvertisementUpdatingState
-from templates.advertisement_editing_texts import update_advertisement_name_text, update_operation_type_text, \
-    update_description_text, update_district_text, update_address_text, update_price_text, update_repair_type_text, \
-    update_quadrature_text, update_rooms_text, update_floor_text, update_creation_date_text, \
-    update_property_category_text, update_property_type_text
-from settings import OPERATION_TYPES, ADVERTISEMENT_RANGE_FIELDS
+from templates import advertisement_editing_texts as texts_of_update
 
 router = Router()
 
@@ -48,7 +43,7 @@ async def update_advertisement_editing(
 
     if field == 'update_name':
         msg = await call.message.edit_text(
-            text=update_advertisement_name_text(
+            text=texts_of_update.update_advertisement_name_text(
                 advertisement_name=advertisement['name']
             ),
             reply_markup=callback_kb.return_back_kb(
@@ -60,8 +55,12 @@ async def update_advertisement_editing(
 
     elif field == 'update_operation_type':
         msg = await call.message.edit_text(
-            text=update_operation_type_text(operation_type=advertisement['operation_type']),
-            reply_markup=callback_kb.operation_type_kb(f'advertisement_update:{advertisement_id}')
+            text=texts_of_update.update_operation_type_text(operation_type=advertisement['operation_type']),
+            reply_markup=callback_kb.advertisement_choices_kb(
+                choice_type='operation_type',
+                callback_for_return=f'advertisement_update:{advertisement_id}',
+                adv_id=advertisement_id
+            )
         )
         await state.update_data(update_operation_type=msg)
         await state.set_state(AdvertisementUpdatingState.update_operation_type)
@@ -69,7 +68,7 @@ async def update_advertisement_editing(
         pass
     elif field == 'update_description':
         msg = await call.message.edit_text(
-            text=update_description_text(description=advertisement['description']),
+            text=texts_of_update.update_description_text(description=advertisement['description']),
             reply_markup=callback_kb.return_back_kb(
                 callback_data=f'advertisement_update:{advertisement_id}'
             )
@@ -79,7 +78,7 @@ async def update_advertisement_editing(
     elif field == 'update_district':
         districts = api_manager.district_service.get_districts()
         msg = await call.message.edit_text(
-            text=update_district_text(
+            text=texts_of_update.update_district_text(
                 district_name=advertisement['district']['name']
             ),
             reply_markup=callback_kb.districts_kb(districts=districts,
@@ -89,7 +88,7 @@ async def update_advertisement_editing(
         await state.set_state(AdvertisementUpdatingState.update_district)
     elif field == 'update_address':
         msg = await call.message.edit_text(
-            text=update_address_text(address=advertisement['address']),
+            text=texts_of_update.update_address_text(address=advertisement['address']),
             reply_markup=callback_kb.return_back_kb(
                 callback_data=f'advertisement_update:{advertisement_id}'
             )
@@ -99,7 +98,7 @@ async def update_advertisement_editing(
     elif field == 'update_property_category':
         property_categories = api_manager.category_service.get_categories()
         msg = await call.message.edit_text(
-            text=update_property_category_text(
+            text=texts_of_update.update_property_category_text(
                 property_category=advertisement['category']['name'],
             ),
             reply_markup=callback_kb.property_categories_kb(
@@ -112,23 +111,27 @@ async def update_advertisement_editing(
         await state.set_state(AdvertisementUpdatingState.update_property_category)
     elif field == 'update_property_type':
         msg = await call.message.edit_text(
-            text=update_property_type_text(
+            text=texts_of_update.update_property_type_text(
                 property_type=advertisement['property_type'],
             ),
-            reply_markup=callback_kb.property_type_kb(callback_data=f'advertisement_update:{advertisement_id}')
+            reply_markup=callback_kb.advertisement_choices_kb(
+                choice_type='property_type',
+                callback_for_return=f'advertisement_update:{advertisement_id}',
+                adv_id=advertisement_id
+            )
         )
         await state.update_data(update_property_type=msg)
         await state.set_state(AdvertisementUpdatingState.update_property_type)
     elif field == 'update_price':
         msg = await call.message.edit_text(
-            text=update_price_text(current_price=advertisement['price']),
+            text=texts_of_update.update_price_text(current_price=advertisement['price']),
             reply_markup=callback_kb.return_back_kb(f'advertisement_update:{advertisement_id}')
         )
         await state.update_data(update_price=msg)
         await state.set_state(AdvertisementUpdatingState.update_price)
     elif field == 'update_quadrature':
         msg = await call.message.edit_text(
-            text=update_quadrature_text(
+            text=texts_of_update.update_quadrature_text(
                 quadrature_from=advertisement['quadrature_from'],
                 quadrature_to=advertisement['quadrature_to'],
             ),
@@ -138,7 +141,7 @@ async def update_advertisement_editing(
         await state.set_state(AdvertisementUpdatingState.update_quadrature)
     elif field == 'update_creation_date':
         msg = await call.message.edit_text(
-            text=update_creation_date_text(
+            text=texts_of_update.update_creation_date_text(
                 current_creation_date=advertisement['creation_year']
             ),
             reply_markup=callback_kb.return_back_kb(f'advertisement_update:{advertisement_id}')
@@ -147,7 +150,7 @@ async def update_advertisement_editing(
         await state.set_state(AdvertisementUpdatingState.update_creation_date)
     elif field == 'update_rooms':
         msg = await call.message.edit_text(
-            text=update_rooms_text(
+            text=texts_of_update.update_rooms_text(
                 rooms_from=advertisement['rooms_qty_from'],
                 rooms_to=advertisement['rooms_qty_to'],
             ),
@@ -157,7 +160,7 @@ async def update_advertisement_editing(
         await state.set_state(AdvertisementUpdatingState.update_rooms)
     elif field == 'update_floor':
         msg = await call.message.edit_text(
-            text=update_floor_text(
+            text=texts_of_update.update_floor_text(
                 floor_from=advertisement['floor_from'],
                 floor_to=advertisement['floor_to'],
             ),
@@ -167,15 +170,22 @@ async def update_advertisement_editing(
         await state.set_state(AdvertisementUpdatingState.update_floor)
     elif field == 'update_repair_type':
         msg = await call.message.edit_text(
-            text=update_repair_type_text(repair_type=advertisement['repair_type']),
-            reply_markup=callback_kb.advertisement_repair_type_kb(f'advertisement_update:{advertisement_id}')
+            text=texts_of_update.update_repair_type_text(repair_type=advertisement['repair_type']),
+            reply_markup=callback_kb.advertisement_choices_kb(
+                choice_type='repair_type',
+                callback_for_return=f'advertisement_update:{advertisement_id}',
+                adv_id=advertisement_id
+            )
         )
         await state.update_data(update_repair_type=msg)
         await state.set_state(AdvertisementUpdatingState.update_repair_type)
     elif field == 'update_house_quadrature':
         pass
     elif field == 'update_is_studio':
-        pass
+        msg = await call.message.edit_text(
+            text=texts_of_update.update_is_studio_text(is_studio=advertisement['is_studio']),
+
+        )
 
 
 @router.message(AdvertisementUpdatingState.update_name)
@@ -183,6 +193,7 @@ async def process_update_name(
         message: types.Message,
         state: FSMContext
 ):
+    """Update advertisement name."""
     print(message.text)
 
 

@@ -38,8 +38,12 @@ def realtor_chosen_district_text(district: str):
     return f"Выбранный район: <b>{district}</b>"
 
 
-def realtor_full_quadrature_of_house():
-    return "Укажите общую площадь участка"
+def realtor_quadrature_of_house_from():
+    return "Площадь участка от:"
+
+
+def realtor_quadrature_of_house_to():
+    return "Площадь участка до:"
 
 
 def realtor_correct_address_text():
@@ -95,10 +99,15 @@ def realtor_advertisement_repair_type_text():
 def realtor_advertisement_completed_text(**kwargs):
     rooms_from_to = f'<b>Кол-во комнат</b> от <i>{kwargs["rooms_from"]}</i> до <i>{kwargs["rooms_to"]}</i>'
     creation_year = f'\n<b>Год постройки: </b><i>{kwargs["creation_date"]}</i>' if kwargs["creation_date"] else ''
-    house_quadrature = f'\n<b>Общая площадь участка: </b>{kwargs["house_quadrature"]}' if kwargs["house_quadrature"] else ''
+
+    house_quadrature_from = kwargs.get('house_quadrature_from', 'Неизвестно')
+    house_quadrature_to = kwargs.get('house_quadrature_to', 'Hеизвестно')
+
+    house_quadrature = f'\n<b>Площадь участка: от </b>{house_quadrature_from} до {house_quadrature_to}' \
+        if kwargs["house_quadrature_from"] and kwargs['house_quadrature_to'] else ''
 
     return f"""
-<b>Заголовок: </b><i>{kwargs["title"]}</i>
+<b>Заголовок:</b><i>{kwargs["title"]}</i>
 <b>Тип объявления: </b><i>{kwargs["operation_type"]}</i>
 <b>Описание: </b><i>{kwargs["description"]}</i>
 <b>Район: </b><i>{kwargs["district"]}</i>
