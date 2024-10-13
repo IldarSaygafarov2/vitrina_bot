@@ -2,7 +2,11 @@ import os
 
 import requests
 from aiogram import html
+from aiogram.fsm.context import FSMContext
+from aiogram.types import Message
+from keyboards.callback import return_back_kb
 
+from services.api import api_manager
 from settings import BASE_DIR
 
 
@@ -75,3 +79,29 @@ def download_medias_from_api(path: str, media_url: str):
         f.write(requests.get(media_url).content)
 
 
+
+
+async def update_advertisement_text_field(
+        message: Message,
+        state: FSMContext,
+        state_field_name: str,
+        updating_field_name: str,
+):
+    new_value = message.text
+
+    current_state = await state.get_data()
+    advertisement_id = current_state.get('advertisement_id')
+    current_msg: Message = current_state.get(state_field_name)
+
+    api_manager.advertiser_service.update_advertisement(
+        advertisement_id=advertisement_id,
+        data={updating_field_name: new_value}
+    )
+
+    await current_msg.edit_text(
+        text=f'Успешно обновлено\n\n'
+             f'Новое значение: <b>{new_value}</b>',
+        reply_markup=return_back_kb(f'advertisement_update:{advertisement_id}')
+    )
+    current_state.pop(state_field_name)
+    await message.delete()

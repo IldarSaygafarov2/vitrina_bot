@@ -160,13 +160,13 @@ def advertisement_choices_kb(choice_type: str, callback_for_return: str | None =
 
     if choice_type == 'repair_type':
         for key, value in REPAIR_TYPES.items():
-            kb.button(text=value, callback_data=f'{prefix}{choice_type}:{key}:{kwargs["adv_id"]}')
+            kb.button(text=value, callback_data=f'{prefix}{choice_type}:{key}')
     elif choice_type == 'property_type':
         for key, value in PROPERTY_TYPES.items():
-            kb.button(text=value, callback_data=f'{prefix}{choice_type}:{key}:{kwargs["adv_id"]}')
+            kb.button(text=value, callback_data=f'{prefix}{choice_type}:{key}')
     elif choice_type == 'operation_type':
         for key, value in OPERATION_TYPES.items():
-            kb.button(text=value, callback_data=f'{prefix}{choice_type}:{key}:{kwargs["adv_id"]}')
+            kb.button(text=value, callback_data=f'{prefix}{choice_type}:{key}')
 
     kb.adjust(2)
     if callback_for_return is not None:
@@ -175,3 +175,11 @@ def advertisement_choices_kb(choice_type: str, callback_for_return: str | None =
     return kb.as_markup()
 
 
+def advertisement_is_studio_kb(callback_data_for_return: str):
+    kb = InlineKeyboardBuilder()
+    kb.button(text='Да', callback_data='studio_yes')
+    kb.button(text='Нет', callback_data='studio_no')
+
+    kb.button(text='Назад', callback_data=callback_data_for_return)
+    kb.adjust(2)
+    return kb.as_markup()
