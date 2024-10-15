@@ -433,7 +433,7 @@ async def process_update_property_category(
     )
     api_manager.advertiser_service.update_advertisement(
         advertisement_id=advertisement_id,
-        data={'property_category': property_category['id']}
+        data={'property_category': property_category['id']},
     )
     await msg.edit_text(
         text=f'''Данные успешно обновлены
@@ -447,7 +447,7 @@ async def process_update_property_category(
     state_data.pop('update_property_category_msg')
 
 
-@ router.callback_query(AdvertisementUpdatingState.update_property_type)
+@router.callback_query(AdvertisementUpdatingState.update_property_type)
 async def process_update_property_type(
         call: types.CallbackQuery,
         state: FSMContext
@@ -456,7 +456,7 @@ async def process_update_property_type(
     print(call.data)
 
 
-@ router.callback_query(AdvertisementUpdatingState.update_is_studio)
+@router.callback_query(AdvertisementUpdatingState.update_is_studio)
 async def process_update_is_studio(
         call: types.CallbackQuery,
         state: FSMContext
