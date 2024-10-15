@@ -132,3 +132,7 @@ def update_is_studio_text(is_studio: bool):
 
 Укажите новое значение:    
 """
+
+
+def update_gallery_text():
+    return f"Фотографии данного объявления:"

@@ -7,6 +7,7 @@ from services.utils import create_advertisement_message, update_advertisement_te
 from settings import OPERATION_TYPES, REPAIR_TYPES, PROPERTY_TYPES
 from states.custom_states import AdvertisementEditingState, AdvertisementUpdatingState
 from templates import advertisement_editing_texts as texts_of_update
+from templates.advertisement_editing_texts import update_gallery_text
 
 router = Router()
 
@@ -205,7 +206,16 @@ async def update_advertisement_editing(
     elif field == 'update_house_quadrature':
         pass
     elif field == 'update_gallery':
-        pass
+        msg = await call.message.edit_text(
+            text=update_gallery_text(),
+            reply_markup=callback_kb.return_back_kb(f'advertisement_update:{advertisement_id}')
+        )
+        gallery = api_manager.advertiser_service.get_advertisement_gallery(
+            advertisement_id=advertisement_id
+        )
+
+        await state.update_data(update_gallery_msg=msg, advertisement_id=advertisement_id, gallery=gallery)
+        await state.set_state(AdvertisementUpdatingState.update_gallery)
 
 
 @router.message(AdvertisementUpdatingState.update_name)
@@ -433,7 +443,7 @@ async def process_update_property_category(
     )
     api_manager.advertiser_service.update_advertisement(
         advertisement_id=advertisement_id,
-        data={'property_category': property_category['id']},
+        data={'category': property_category['id']},
     )
     await msg.edit_text(
         text=f'''Данные успешно обновлены
@@ -453,7 +463,24 @@ async def process_update_property_type(
         state: FSMContext
 ):
     await call.answer()
-    print(call.data)
+
+    state_data = await state.get_data()
+    advertisement_id = state_data.get('advertisement_id')
+    msg = state_data.get('update_property_type_msg')
+
+    _, property_type = call.data.split(':')
+
+    api_manager.advertiser_service.update_advertisement(
+        advertisement_id=advertisement_id,
+        data={'property_type': property_type},
+    )
+
+    await msg.edit_text(
+        text='Данные успешно обновлены!\n\n'
+             f'Новое значение: <b><i>{PROPERTY_TYPES[property_type]}</i></b>',
+        reply_markup=callback_kb.return_back_kb(f'advertisement_update:{advertisement_id}')
+    )
+    state_data.pop('update_property_type_msg')
 
 
 @router.callback_query(AdvertisementUpdatingState.update_is_studio)
@@ -462,4 +489,39 @@ async def process_update_is_studio(
         state: FSMContext
 ):
     await call.answer()
-    print(call.data)
+    state_data = await state.get_data()
+    advertisement_id = state_data.get('advertisement_id')
+    msg = state_data.get('update_is_studio_msg')
+
+    _, is_studio = call.data.split('_')
+
+    is_studio = True if is_studio == 'yes' else False
+    text = 'Да' if is_studio else 'Нет'
+    api_manager.advertiser_service.update_advertisement(
+        advertisement_id=advertisement_id,
+        data={'is_studio': is_studio},
+    )
+    await msg.edit_text(
+        text='Данные успешно изменены!!\n\n'
+             f'Новое значение: <b><i>{text}</i></b>',
+        reply_markup=callback_kb.return_back_kb(f'advertisement_update:{advertisement_id}')
+    )
+    state_data.pop('update_is_studio_msg')
+
+
+@router.callback_query(AdvertisementUpdatingState.update_gallery)
+async def process_update_gallery(
+        call: types.CallbackQuery,
+        state: FSMContext
+):
+    await call.answer()
+
+    state_data = await state.get_data()
+    advertisement_id = state_data.get('advertisement_id')
+    msg = state_data.get('update_gallery_msg')
+
+    gallery = api_manager.advertiser_service.get_advertisement_gallery(
+        advertisement_id=advertisement_id
+    )
+
+    print(gallery)
