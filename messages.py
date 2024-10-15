@@ -2,7 +2,8 @@ from aiogram import html
 
 
 def create_advertisement_message(**kwargs):
-    t = f'{html.bold('Кол-во комнат: ')}от {html.italic(kwargs["rooms_from"])} до {html.italic(kwargs["rooms_to"])}'
+    t = f'{html.bold('Кол-во комнат: ')}от {html.italic(kwargs["rooms_from"])} до {
+        html.italic(kwargs["rooms_to"])}'
     msg = f"""
 <b>Заголовок: </b>
 <i>{kwargs['title']}</i>

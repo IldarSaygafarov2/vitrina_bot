@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 import requests
 from aiogram import html
@@ -48,8 +49,10 @@ def create_advertisement_message(item: dict) -> str:
     floor_to = item.get('floor_to')
     repair_type = item.get('repair_type')
 
-    t = f'{html.bold('Кол-во комнат: ')}от {html.italic(rooms_qty_from)} до {html.italic(rooms_qty_to)}'
-    t2 = f'\n{html.bold("Год постройки: ")}{html.italic(creation_year)}' if creation_year else ''
+    t = f'{html.bold('Кол-во комнат: ')}от {html.italic(rooms_qty_from)
+                                            } до {html.italic(rooms_qty_to)}'
+    t2 = f'\n{html.bold("Год постройки: ")}{html.italic(
+        creation_year)}' if creation_year else ''
     #
     return f'''
 {html.bold('Заголовок: ')}
@@ -79,13 +82,12 @@ def download_medias_from_api(path: str, media_url: str):
         f.write(requests.get(media_url).content)
 
 
-
-
 async def update_advertisement_text_field(
         message: Message,
         state: FSMContext,
         state_field_name: str,
-        updating_field_name: str,
+        updating_field_name: Optional[str] = None,
+        addon_fields: Optional[dict[str, int]] = None
 ):
     new_value = message.text
 
@@ -93,14 +95,19 @@ async def update_advertisement_text_field(
     advertisement_id = current_state.get('advertisement_id')
     current_msg: Message = current_state.get(state_field_name)
 
+    if updating_field_name:
+        data = {updating_field_name: new_value}
+    else:
+        data = addon_fields
+
     api_manager.advertiser_service.update_advertisement(
         advertisement_id=advertisement_id,
-        data={updating_field_name: new_value}
+        data=data
     )
 
     await current_msg.edit_text(
         text=f'Успешно обновлено\n\n'
-             f'Новое значение: <b>{new_value}</b>',
+        f'Новое значение: <b>{new_value}</b>',
         reply_markup=return_back_kb(f'advertisement_update:{advertisement_id}')
     )
     current_state.pop(state_field_name)
