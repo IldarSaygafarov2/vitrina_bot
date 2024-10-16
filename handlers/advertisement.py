@@ -395,7 +395,7 @@ async def process_repair(message: types.Message, state: FSMContext):
         file = open(f'photos/{media_file}', 'rb')
         media_data = {'photo': file}
         data = {'advertisement': new['id']}
-        res = api_manager.advertiser_service.upload_image_to_gallery(
+        res = api_manager.gallery.upload_image_to_gallery(
             advertisement_id=new['id'],
             files=media_data,
             data=data

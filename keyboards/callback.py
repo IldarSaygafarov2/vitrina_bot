@@ -183,3 +183,13 @@ def advertisement_is_studio_kb(callback_data_for_return: str):
     kb.button(text='Назад', callback_data=callback_data_for_return)
     kb.adjust(2)
     return kb.as_markup()
+
+
+def gallery_update_kb(gallery: list[dict[str, str | int]], callback_data_for_return: str = None):
+    kb = InlineKeyboardBuilder()
+    for idx, obj in enumerate(gallery, start=1):
+        kb.button(text=str(idx), callback_data=f'gallery_update:{obj["id"]}')
+    kb.adjust(2)
+    if callback_data_for_return is not None:
+        kb.row(InlineKeyboardButton(text='Назад', callback_data=callback_data_for_return))
+    return kb.as_markup()

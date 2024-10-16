@@ -1,4 +1,5 @@
 import requests
+
 import settings
 
 
@@ -34,13 +35,24 @@ class DistrictAPIService(ApiService):
         return self.get(settings.API_URL + '/districts/' + district_slug)
 
 
+class AdvertisementGalleryAPIService(ApiService):
+    def get_advertisement_gallery(self, advertisement_id: int, **kwargs):
+        endpoint = f'{settings.API_URL}/advertisements/{advertisement_id}/gallery/'
+        return self.get(endpoint, **kwargs)
+
+    def upload_image_to_gallery(self, advertisement_id: int, **kwargs):
+        endpoint = f'{settings.API_URL}/advertisements/{advertisement_id}/gallery/'
+        return self.post(endpoint, **kwargs)
+
+    def update_image_gallery(self, advertisement_id: int, gallery_id: int, **kwargs):
+        endpoint = f'{settings.API_URL}/advertisements/{advertisement_id}/gallery/{gallery_id}/'
+        return self.patch(endpoint, **kwargs)
+
+
+
 class AdvertisementAPIService(ApiService):
     def create_advertisement(self, **kwargs):
         return self.post(settings.API_URL + '/advertisements/', **kwargs)
-
-    def upload_image_to_gallery(self, advertisement_id, **kwargs):
-        endpoint = f'{settings.API_URL}/advertisements/{advertisement_id}/gallery/'
-        return self.post(endpoint, **kwargs)
 
     def get_all(self, **kwargs):
         endpoint = f'{settings.API_URL}/advertisements/'
@@ -54,9 +66,6 @@ class AdvertisementAPIService(ApiService):
         endpoint = f'{settings.API_URL}/advertisements/{advertisement_id}/'
         return self.patch(endpoint, data, **kwargs)
 
-    def get_advertisement_gallery(self, advertisement_id: int, **kwargs):
-        endpoint = f'{settings.API_URL}/advertisements/{advertisement_id}/gallery/'
-        return self.get(endpoint, **kwargs)
 
 
 class UserAPIService(ApiService):
@@ -76,12 +85,10 @@ class UserAPIService(ApiService):
         return self.get(endpoint, **kwargs)
 
 
-
 class AdvertisementModerationAPIService(ApiService):
     def get_realtor_advertisements(self, realtor_id: int, **kwargs) -> list:
         url = f'{settings.API_URL}/users/{realtor_id}/moderation_advertisements/'
         return self.get(url, **kwargs)
-
 
 
 class APIManager(ApiService):
@@ -91,6 +98,7 @@ class APIManager(ApiService):
         self.advertiser_service: AdvertisementAPIService = AdvertisementAPIService()
         self.user_service: UserAPIService = UserAPIService()
         self.moderation: AdvertisementModerationAPIService = AdvertisementModerationAPIService()
+        self.gallery: AdvertisementGalleryAPIService = AdvertisementGalleryAPIService()
 
 
 api_manager = APIManager()

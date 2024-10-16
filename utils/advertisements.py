@@ -1,7 +1,7 @@
 import os
 
 import requests
-
+from pathlib import Path
 from settings import BASE_DIR
 
 
@@ -28,3 +28,5 @@ def save_advertisements_photos(
         photos_paths.append(f'{directory}/{photo_name}')
         print('photo saved successfully')
     return photos_paths
+
+

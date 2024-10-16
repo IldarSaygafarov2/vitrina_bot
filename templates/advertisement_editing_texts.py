@@ -135,4 +135,5 @@ def update_is_studio_text(is_studio: bool):
 
 
 def update_gallery_text():
-    return f"Фотографии данного объявления:"
+    return (f"Фотографии данного объявления\n\n"
+            f"Выберите номер фотографии, которую хотите изменить")
