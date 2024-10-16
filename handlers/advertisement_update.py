@@ -8,7 +8,7 @@ from services.utils import create_advertisement_message, update_advertisement_te
 from settings import OPERATION_TYPES, REPAIR_TYPES, PROPERTY_TYPES
 from states.custom_states import AdvertisementEditingState, AdvertisementUpdatingState
 from templates import advertisement_editing_texts as texts_of_update
-from utils.advertisements import save_advertisements_photos
+from utils.advertisements import save_advertisements_photos, save_photos_from_bot
 
 router = Router()
 
@@ -200,7 +200,7 @@ async def update_advertisement_editing(
                 is_studio=advertisement['is_studio']),
             reply_markup=callback_kb.advertisement_is_studio_kb(
                 callback_data_for_return=f'advertisement_update:{
-                    advertisement_id}',
+                advertisement_id}',
             )
         )
         await state.update_data(update_is_studio_msg=msg, advertisement_id=advertisement_id)
@@ -210,7 +210,7 @@ async def update_advertisement_editing(
     elif field == 'update_gallery':
         starter_msg = state_data.get('starter_msg')
 
-        gallery = api_manager.advertiser_service.get_advertisement_gallery(
+        gallery = api_manager.gallery.get_advertisement_gallery(
             advertisement_id=advertisement_id
         )
 
@@ -273,7 +273,7 @@ async def process_update_operation_type(
 
     await msg.edit_text(
         text=f'Тип операции успешно обовлен\n'
-        f'Новое значение: <b>{operation_type_text}</b>',
+             f'Новое значение: <b>{operation_type_text}</b>',
         reply_markup=callback_kb.return_back_kb(
             f'advertisement_update:{advertisement_id}')
     )
@@ -395,7 +395,7 @@ async def process_update_rooms(
     )
 
 
-@ router.message(AdvertisementUpdatingState.update_quadrature)
+@router.message(AdvertisementUpdatingState.update_quadrature)
 async def process_update_quadrature(
         message: types.Message,
         state: FSMContext
@@ -414,7 +414,7 @@ async def process_update_quadrature(
     )
 
 
-@ router.message(AdvertisementUpdatingState.update_floor)
+@router.message(AdvertisementUpdatingState.update_floor)
 async def process_update_floor(
         message: types.Message,
         state: FSMContext
@@ -446,7 +446,7 @@ async def process_update_creation_date(
     )
 
 
-@ router.callback_query(AdvertisementUpdatingState.update_property_category)
+@router.callback_query(AdvertisementUpdatingState.update_property_category)
 async def process_update_property_category(
         call: types.CallbackQuery,
         state: FSMContext
@@ -538,7 +538,42 @@ async def process_update_gallery(
 
     state_data = await state.get_data()
     advertisement_id = state_data.get('advertisement_id')
-    msg = state_data.get('update_gallery_msg')
     gallery = state_data.get('gallery')
 
     _, gallery_photo_id = call.data.split(':')
+
+    photo_for_update = [obj for obj in gallery if obj['id'] == int(gallery_photo_id)]
+    msg_gallery = await call.message.edit_text(
+        text='Отправьте новую фотографию',
+        reply_markup=callback_kb.return_back_kb(f'advertisement_update:{advertisement_id}')
+    )
+
+    await state.update_data(msg_gallery=msg_gallery, photo_for_update=photo_for_update)
+    await state.set_state(AdvertisementUpdatingState.update_gallery_photo)
+
+
+@router.message(AdvertisementUpdatingState.update_gallery_photo)
+async def process_update_gallery_photo(
+        message: types.Message,
+        state: FSMContext
+):
+    state_data = await state.get_data()
+    # advertisement_id = state_data.get('advertisement_id')
+    # new_photo = message.photo[-1].file_id
+    # msg_gallery = state_data.get('msg_gallery')
+    # gallery = state_data.get('gallery')
+    # # photo_for_update = state_data.get('photo_for_update')
+    #
+    #
+    #
+    # file_names = await save_photos_from_bot(message, [new_photo])
+    #
+    # file = open(f'photos/{file_names[0]}', 'rb')
+    # res = api_manager.gallery.upload_image_to_gallery(
+    #     advertisement_id=advertisement_id,
+    #     files={'photo': file},
+    #     data={'advertisement': advertisement_id}
+    # )
+    #
+    # print(gallery)
+    # print(res)

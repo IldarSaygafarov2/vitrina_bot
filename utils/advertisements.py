@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 import requests
 from pathlib import Path
@@ -30,3 +31,15 @@ def save_advertisements_photos(
     return photos_paths
 
 
+async def save_photos_from_bot(
+        message,
+        photos_list
+):
+    file_names = []
+    for photo in photos_list:
+        file = await message.bot.get_file(photo)
+        file_path = file.file_path
+        file_name = file_path.split('/')[-1]
+        file_names.append(file_name)
+        await message.bot.download_file(file_path, f'photos/{file_name}')
+    return file_names

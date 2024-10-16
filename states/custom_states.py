@@ -45,6 +45,7 @@ class AdvertisementUpdatingState(StatesGroup):
     update_name = State()
     update_operation_type = State()
     update_gallery = State()
+    update_gallery_photo = State()
     update_description = State()
     update_district = State()
     update_address = State()

@@ -12,6 +12,7 @@ from services.api import api_manager
 from services.utils import get_repair_type_by_name, get_property_type
 from states.custom_states import AdvertisementState, AdvertisementEditingState
 from templates import advertisements_texts as adv_texts
+from utils.advertisements import save_photos_from_bot
 
 router = Router(name='advertisement')
 
@@ -322,19 +323,16 @@ async def process_repair(message: types.Message, state: FSMContext):
     address = data.get('address')
     house_quadrature_from = data.get('house_quadrature_from')
     house_quadrature_to = data.get('house_quadrature_to')
-    file_names = []
 
-    for photo in data['photos']:
-        file = await message.bot.get_file(photo)
-        file_path = file.file_path
-        file_names.append(file_path.split('/')[-1])
-        await message.bot.download_file(file_path, f'photos/{file_path.split("/")[-1]}')
+
 
     repair_type_choice = get_repair_type_by_name(repair_type)
     property_type_choice = get_property_type(property_type)
 
     username = message.from_user.username
     user_id = api_manager.user_service.get_user_id(username)
+
+    file_names = await save_photos_from_bot(message, data['photos'])
 
     msg = adv_texts.realtor_advertisement_completed_text(
         title=title,
