@@ -72,7 +72,6 @@ class AdvertisementAPIService(ApiService):
         return self.patch(endpoint, data, **kwargs)
 
 
-
 class UserAPIService(ApiService):
     def get_user_id(self, tg_username: str) -> int:
         return self.get(settings.API_URL + '/users/' + tg_username + '/user/')

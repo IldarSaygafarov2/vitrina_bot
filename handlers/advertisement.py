@@ -418,8 +418,8 @@ async def process_realtor_advertisements(
     user_advertisements = api_manager.user_service.get_user_advertisements(user_id=user_id)
 
     await state.set_state(AdvertisementEditingState.start)
-
+    await state.update_data(realtor_id=user_id)
     await message.answer(
-        f'Выберите объвяление, которое хотите отредактировать: ',
+        'Выберите объявление, которое хотите изменить',
         reply_markup=callback_kb.advertisements_for_update_kb(advertisements=user_advertisements)
     )
