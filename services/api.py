@@ -4,16 +4,19 @@ import settings
 
 
 class ApiService:
-    def get(self, url: str, **kwargs):
+    @staticmethod
+    def get(url: str, **kwargs):
         response = requests.get(url, **kwargs)
         response.raise_for_status()
         return response.json()
 
-    def post(self, url: str, **kwargs):
+    @staticmethod
+    def post(url: str, **kwargs):
         response = requests.post(url, **kwargs)
         return response.json()
 
-    def patch(self, url: str, data, **kwargs):
+    @staticmethod
+    def patch(url: str, data, **kwargs):
         response = requests.patch(url, data, **kwargs)
         response.raise_for_status()
         return response.json()
