@@ -3,6 +3,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.utils.media_group import MediaGroupBuilder
 
 from keyboards import callback as callback_kb
+from keyboards import reply as reply_kb
 from services.api import api_manager
 from settings import OPERATION_TYPES, REPAIR_TYPES, PROPERTY_TYPES
 from states.custom_states import AdvertisementEditingState, AdvertisementUpdatingState
@@ -10,7 +11,7 @@ from templates import advertisement_editing_texts as texts_of_update
 from utils.advertisements import (
     save_advertisements_photos,
     create_advertisement_message,
-    update_advertisement_text_field
+    update_advertisement_text_field, save_photos_from_bot
 )
 
 router = Router()
@@ -43,7 +44,7 @@ async def update_advertisement_editing(
         call: types.CallbackQuery,
         state: FSMContext
 ):
-    await call.answer()
+    # await call.answer()
 
     state_data = await state.get_data()
 
@@ -225,6 +226,9 @@ async def update_advertisement_editing(
             advertisement_id=advertisement_id
         )
 
+        if not gallery:
+            return await call.answer('У данного объявления нет фотографий', show_alert=True)
+
         gallery_photos = [obj['photo'] for obj in gallery]
         saved_photos = save_advertisements_photos(gallery_photos, 'photos')
 
@@ -232,8 +236,11 @@ async def update_advertisement_editing(
         for saved_photo in saved_photos:
             media_group.add_photo(type='photo', media=types.FSInputFile(saved_photo))
 
-        await starter_msg.delete()
+        if starter_msg:
+            await starter_msg.delete()
+
         msg = await call.message.answer_media_group(media=media_group.build())
+
         await call.message.answer(
             text='Выберите номер фотографии, которую хотите изменить',
             reply_markup=callback_kb.gallery_update_kb(
@@ -569,25 +576,44 @@ async def process_update_gallery_photo(
         state: FSMContext
 ):
     state_data = await state.get_data()
-    # advertisement_id = state_data.get('advertisement_id')
-    # new_photo = message.photo[-1].file_id
-    # msg_gallery = state_data.get('msg_gallery')
-    # gallery = state_data.get('gallery')
-    # # photo_for_update = state_data.get('photo_for_update')
-    #
-    #
-    #
-    # file_names = await save_photos_from_bot(message, [new_photo])
-    #
-    # file = open(f'photos/{file_names[0]}', 'rb')
-    # res = api_manager.gallery.upload_image_to_gallery(
-    #     advertisement_id=advertisement_id,
-    #     files={'photo': file},
-    #     data={'advertisement': advertisement_id}
-    # )
-    #
-    # print(gallery)
-    # print(res)
+    advertisement_id = state_data.get('advertisement_id')
+    photo_for_update = state_data.get('photo_for_update')
+    msg_gallery = state_data.get('msg_gallery')
+    update_gallery_msg = state_data.get('update_gallery_msg')
+
+    new_photo_id = message.photo[-1].file_id
+
+    new_file = await save_photos_from_bot(message, [new_photo_id])
+    file = open(f'photos/{new_file[0]}', 'rb')
+    api_manager.gallery.update_image_gallery(
+        advertisement_id=advertisement_id,
+        gallery_id=photo_for_update[0]['id'],
+        files={'photo': file},
+        data={'advertisement': advertisement_id}
+    )
+
+    gallery = api_manager.gallery.get_advertisement_gallery(
+        advertisement_id=advertisement_id
+    )
+    gallery_photos = [obj['photo'] for obj in gallery]
+    saved_photos = save_advertisements_photos(gallery_photos, 'photos')
+    media_group = MediaGroupBuilder(caption='Фотография успешно обновлена')
+
+    for i in update_gallery_msg:
+        await i.delete()
+    await msg_gallery.delete()
+    await message.delete()
+
+    for saved_photo in saved_photos:
+        media_group.add_photo(type='photo', media=types.FSInputFile(saved_photo))
+
+    await message.answer_media_group(media=media_group.build())
+
+    advertisement = api_manager.advertiser_service.get_one(advertisement_id=advertisement_id)
+    await message.answer(
+        text=create_advertisement_message(advertisement),
+        reply_markup=callback_kb.advertisement_fields_for_update_kb(advertisement_id)
+    )
 
 
 @router.message(AdvertisementUpdatingState.update_house_quadrature)
@@ -606,4 +632,38 @@ async def process_update_house_quadrature(
             'house_quadrature_from': house_quadrature_from,
             'house_quadrature_to': house_quadrature_to,
         }
+    )
+
+
+@router.callback_query(F.data == 'realtor_start_menu')
+async def back_to_realtor_start_menu(
+        call: types.CallbackQuery,
+        state: FSMContext
+):
+    await call.answer()
+    state_data = await state.get_data()
+    realtor_advertisements_msg = state_data.get('realtor_advertisements_msg')
+
+    await realtor_advertisements_msg.delete()
+
+    await call.message.answer(
+        text='Выберите действие ниже:',
+        reply_markup=reply_kb.start_kb()
+    )
+    await state.clear()
+
+
+@router.callback_query(F.data == 'back_to_ads')
+async def back_to_ads(
+        call: types.CallbackQuery,
+        state: FSMContext
+):
+    await call.answer()
+
+    state_data = await state.get_data()
+    user_advertisements = state_data.get('user_advertisements')
+
+    await call.message.edit_text(
+        text='Выберите объявление, которое хотите изменить:',
+        reply_markup=callback_kb.advertisements_for_update_kb(user_advertisements)
     )

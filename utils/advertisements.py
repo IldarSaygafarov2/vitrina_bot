@@ -8,7 +8,8 @@ from aiogram.types import Message
 
 from keyboards.callback import return_back_kb
 from services.api import api_manager
-from settings import BASE_DIR
+from settings import BASE_DIR, OPERATION_TYPES
+
 
 
 def create_advertisement_message(item: dict) -> str:
@@ -39,7 +40,7 @@ def create_advertisement_message(item: dict) -> str:
 {html.bold('Заголовок: ')}
 {html.italic(name)}
 {html.bold('Тип объявления: ')}
-{html.italic(operation_type)}
+{html.italic(OPERATION_TYPES[operation_type])}
 {html.bold('Описание: ')}
 {html.italic(description)}
 {html.bold('Район: ')}{html.italic(district.get('name'))}

@@ -52,7 +52,12 @@ REPAIR_TYPES = {
     "pre_finished": "Предчистовая",
 }
 
+REPAIR_TYPES_REVERSED = {value: key for key, value in REPAIR_TYPES.items()}
+
+
 PROPERTY_TYPES = {
     'new': 'Новостройка',
     'old': 'Вторичный фонд'
 }
+
+PROPERTY_TYPES_REVERSED = {value: key for key, value in PROPERTY_TYPES.items()}
