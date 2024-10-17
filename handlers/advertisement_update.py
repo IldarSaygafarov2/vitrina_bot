@@ -206,7 +206,15 @@ async def update_advertisement_editing(
         await state.update_data(update_is_studio_msg=msg, advertisement_id=advertisement_id)
         await state.set_state(AdvertisementUpdatingState.update_is_studio)
     elif field == 'update_house_quadrature':
-        pass
+        msg = await call.message.edit_text(
+            text=texts_of_update.update_house_quadrature_text(
+                house_quadrature_from=advertisement['house_quadrature_from'],
+                house_quadrature_to=advertisement['house_quadrature_to'],
+            ),
+            reply_markup=callback_kb.return_back_kb(f'advertisement_update:{advertisement_id}')
+        )
+        await state.update_data(update_house_quadrature_msg=msg, advertisement_id=advertisement_id)
+        await state.set_state(AdvertisementUpdatingState.update_house_quadrature)
     elif field == 'update_gallery':
         starter_msg = state_data.get('starter_msg')
 
@@ -577,3 +585,22 @@ async def process_update_gallery_photo(
     #
     # print(gallery)
     # print(res)
+
+
+@router.message(AdvertisementUpdatingState.update_house_quadrature)
+async def process_update_house_quadrature(
+        message: types.Message,
+        state: FSMContext
+):
+    new_value = message.text
+    house_quadrature_from, house_quadrature_to = new_value.split(',')
+
+    await update_advertisement_text_field(
+        message=message,
+        state=state,
+        state_field_name='update_house_quadrature',
+        addon_fields={
+            'house_quadrature_from': house_quadrature_from,
+            'house_quadrature_to': house_quadrature_to,
+        }
+    )

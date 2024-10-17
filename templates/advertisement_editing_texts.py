@@ -96,6 +96,20 @@ def update_floor_text(floor_from: int, floor_to: int):
 <code>3,5</code> 
 """
 
+def update_house_quadrature_text(
+        house_quadrature_from: int,
+        house_quadrature_to: int
+):
+    return f"""
+Текущее значение:
+<b><i>Площадь дома(участка) от: {house_quadrature_from}</i></b>
+<b><i>Площадь дома(участка) до: {house_quadrature_to}</i></b>
+
+Укажите новые значения через запятую, важно соблюдать правильный порядок:
+
+<code>150,250</code> 
+"""
+
 
 def update_creation_date_text(current_creation_date: int):
     return f"""

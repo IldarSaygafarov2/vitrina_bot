@@ -87,7 +87,7 @@ async def update_advertisement_text_field(
         state: FSMContext,
         state_field_name: str,
         updating_field_name: Optional[str] = None,
-        addon_fields: Optional[dict[str, int]] = None
+        addon_fields: Optional[dict[str, int | str]] = None
 ):
     new_value = message.text
 
