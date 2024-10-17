@@ -4,11 +4,14 @@ from aiogram.utils.media_group import MediaGroupBuilder
 
 from keyboards import callback as callback_kb
 from services.api import api_manager
-from services.utils import create_advertisement_message, update_advertisement_text_field
 from settings import OPERATION_TYPES, REPAIR_TYPES, PROPERTY_TYPES
 from states.custom_states import AdvertisementEditingState, AdvertisementUpdatingState
 from templates import advertisement_editing_texts as texts_of_update
-from utils.advertisements import save_advertisements_photos, save_photos_from_bot
+from utils.advertisements import (
+    save_advertisements_photos,
+    create_advertisement_message,
+    update_advertisement_text_field
+)
 
 router = Router()
 

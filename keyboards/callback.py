@@ -4,23 +4,6 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from settings import KB_FIELDS, OPERATION_TYPES, REPAIR_TYPES, PROPERTY_TYPES
 
 
-def realtor_start_kb():
-    kb = InlineKeyboardBuilder()
-    kb.button(text='Мои объявления', callback_data='show_my_ads')
-    kb.button(text='Добавить объявление', callback_data='create_ad')
-    kb.adjust(2)
-    return kb.as_markup()
-
-
-def ads_categories_kb():
-    kb = InlineKeyboardBuilder()
-    kb.button(text='Аренда', callback_data='category_Аренда')
-    kb.button(text='Покупка', callback_data='category_Покупка')
-    kb.button(text='Назад', callback_data='start_realtor')
-    kb.adjust(2)
-    return kb.as_markup()
-
-
 def group_director_kb():
     kb = InlineKeyboardBuilder()
     kb.button(text='Список риелторов', callback_data='realtors_list')
@@ -76,14 +59,6 @@ def ads_moderation_kb():
     return kb.as_markup()
 
 
-def moderate_adv_kb(adv_id: int):
-    kb = InlineKeyboardBuilder()
-    kb.button(text='✅', callback_data=f'yes_{adv_id}')
-    kb.button(text='🚫', callback_data=f'no_{adv_id}')
-    kb.adjust(2, 2)
-    return kb.as_markup()
-
-
 def realtor_advertisements_kb(ads_list: list, checked: bool):
     kb = InlineKeyboardBuilder()
     for idx, ad in enumerate(ads_list, start=1):
@@ -109,20 +84,6 @@ def return_to_ads_kb(callback_data: str, adv_id: int, show_checks: bool = True):
 def return_back_kb(callback_data: str):
     kb = InlineKeyboardBuilder()
     kb.button(text='Назад', callback_data=callback_data)
-    return kb.as_markup()
-
-
-def continue_kb():
-    kb = InlineKeyboardBuilder()
-    kb.button(text='Продолжить', callback_data='continue')
-    return kb.as_markup()
-
-
-def realtors_ads_kb(realtor_id: int):
-    kb = InlineKeyboardBuilder()
-    kb.button(text='Проверенные', callback_data=f'checked_ads:{realtor_id}')
-    kb.button(text='Непроверенные', callback_data=f'unchecked_ads:{realtor_id}')
-    kb.adjust()
     return kb.as_markup()
 
 

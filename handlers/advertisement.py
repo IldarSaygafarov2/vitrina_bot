@@ -9,7 +9,7 @@ from filters.realtor import RealtorFilter
 from keyboards import callback as callback_kb
 from keyboards import reply as kb
 from services.api import api_manager
-from services.utils import get_repair_type_by_name, get_property_type
+from settings import REPAIR_TYPES, PROPERTY_TYPES
 from states.custom_states import AdvertisementState, AdvertisementEditingState
 from templates import advertisements_texts as adv_texts
 from utils.advertisements import save_photos_from_bot
@@ -46,8 +46,7 @@ async def process_main_categories(message: types.Message, state: FSMContext):
     )
 
 
-@router.callback_query(F.data.startswith('property_category'))
-@router.message(AdvertisementState.property_category)
+@router.callback_query(AdvertisementState.property_category, F.data.startswith('property_category'))
 async def process_photos_qty(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
 
@@ -107,7 +106,6 @@ async def process_description(message: types.Message, state: FSMContext):
     )
 
 
-# @router.message(AdvertisementState.district)
 @router.callback_query(AdvertisementState.district, F.data.startswith('district'))
 async def process_district(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
@@ -324,10 +322,8 @@ async def process_repair(message: types.Message, state: FSMContext):
     house_quadrature_from = data.get('house_quadrature_from')
     house_quadrature_to = data.get('house_quadrature_to')
 
-
-
-    repair_type_choice = get_repair_type_by_name(repair_type)
-    property_type_choice = get_property_type(property_type)
+    repair_type_choice = REPAIR_TYPES[repair_type]
+    property_type_choice = PROPERTY_TYPES[property_type]
 
     username = message.from_user.username
     user_id = api_manager.user_service.get_user_id(username)

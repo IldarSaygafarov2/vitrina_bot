@@ -51,19 +51,21 @@ class AdvertisementGalleryAPIService(ApiService):
 
 
 class AdvertisementAPIService(ApiService):
+    ADVERTISEMENTS_BASE_URL: str = settings.API_URL + '/advertisements/'
+    ADVERTISEMENTS_DEEP_URL: str = settings.API_URL + '/advertisements/{kwarg}/'
+
     def create_advertisement(self, **kwargs):
-        return self.post(settings.API_URL + '/advertisements/', **kwargs)
+        return self.post(self.ADVERTISEMENTS_BASE_URL, **kwargs)
 
     def get_all(self, **kwargs):
-        endpoint = f'{settings.API_URL}/advertisements/'
-        return self.get(endpoint, **kwargs)
+        return self.get(self.ADVERTISEMENTS_BASE_URL, **kwargs)
 
     def get_one(self, advertisement_id: int, **kwargs):
-        endpoint = f'{settings.API_URL}/advertisements/{advertisement_id}/'
+        endpoint = self.ADVERTISEMENTS_DEEP_URL.format(kwarg=advertisement_id)
         return self.get(endpoint, **kwargs)
 
     def update_advertisement(self, advertisement_id: int, data, **kwargs):
-        endpoint = f'{settings.API_URL}/advertisements/{advertisement_id}/'
+        endpoint = self.ADVERTISEMENTS_DEEP_URL.format(kwarg=advertisement_id)
         return self.patch(endpoint, data, **kwargs)
 
 

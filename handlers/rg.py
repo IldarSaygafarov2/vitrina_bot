@@ -6,7 +6,7 @@ from filters.rg import GroupDirectorFilter
 from keyboards import callback
 from keyboards.callback import ads_moderation_kb
 from services.api import api_manager
-from services.utils import create_advertisement_message
+
 from states.custom_states import RGProcessState
 from templates.alert_texts import (
     no_unchecked_advertisements_alert, no_checked_advertisements_alert
@@ -15,7 +15,7 @@ from templates.rg_texts import (
     rg_welcome_text, rg_list_text, rg_advertisements_type_text, rg_checked_advertisements_text,
     rg_advertisement_moderation_complete_text, rg_advertisement_decline_reason_text
 )
-from utils.advertisements import save_advertisements_photos
+from utils.advertisements import save_advertisements_photos, create_advertisement_message
 
 router = Router(name='rg_user')
 
