@@ -411,8 +411,10 @@ async def process_realtor_advertisements(
         message: types.Message,
         state: FSMContext
 ):
+
+    username = message.from_user.username
     user_id = api_manager.user_service.get_user_id(
-        tg_username=message.from_user.username
+        tg_username=username
     ).get('id')
 
     user_advertisements = api_manager.user_service.get_user_advertisements(user_id=user_id)

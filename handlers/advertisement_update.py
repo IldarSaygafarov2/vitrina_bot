@@ -2,6 +2,7 @@ from aiogram import Router, F, types
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.media_group import MediaGroupBuilder
 
+from handlers.advertisement import process_realtor_advertisements
 from keyboards import callback as callback_kb
 from keyboards import reply as reply_kb
 from services.api import api_manager
@@ -641,16 +642,18 @@ async def back_to_realtor_start_menu(
         state: FSMContext
 ):
     await call.answer()
-    state_data = await state.get_data()
-    realtor_advertisements_msg = state_data.get('realtor_advertisements_msg')
 
-    await realtor_advertisements_msg.delete()
-
-    await call.message.answer(
-        text='Выберите действие ниже:',
-        reply_markup=reply_kb.start_kb()
-    )
-    await state.clear()
+    # await call.answer()
+    # state_data = await state.get_data()
+    # realtor_advertisements_msg = state_data.get('realtor_advertisements_msg')
+    #
+    # await realtor_advertisements_msg.delete()
+    #
+    # await call.message.answer(
+    #     text='Выберите действие ниже:',
+    #     reply_markup=reply_kb.start_kb()
+    # )
+    # await state.clear()
 
 
 @router.callback_query(F.data == 'back_to_ads')
