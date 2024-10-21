@@ -9,7 +9,7 @@ from filters.realtor import RealtorFilter
 from keyboards import callback as callback_kb
 from keyboards import reply as kb
 from services.api import api_manager
-from settings import REPAIR_TYPES, PROPERTY_TYPES
+from settings import  REPAIR_TYPES_REVERSED, PROPERTY_TYPES_REVERSED
 from states.custom_states import AdvertisementState, AdvertisementEditingState
 from templates import advertisements_texts as adv_texts
 from utils.advertisements import save_photos_from_bot
@@ -322,8 +322,8 @@ async def process_repair(message: types.Message, state: FSMContext):
     house_quadrature_from = data.get('house_quadrature_from')
     house_quadrature_to = data.get('house_quadrature_to')
 
-    repair_type_choice = REPAIR_TYPES[repair_type]
-    property_type_choice = PROPERTY_TYPES[property_type]
+    repair_type_choice = REPAIR_TYPES_REVERSED[repair_type]
+    property_type_choice = PROPERTY_TYPES_REVERSED[property_type]
 
     username = message.from_user.username
     user_id = api_manager.user_service.get_user_id(username)
@@ -411,15 +411,18 @@ async def process_realtor_advertisements(
         message: types.Message,
         state: FSMContext
 ):
+
+    username = message.from_user.username
     user_id = api_manager.user_service.get_user_id(
-        tg_username=message.from_user.username
+        tg_username=username
     ).get('id')
 
     user_advertisements = api_manager.user_service.get_user_advertisements(user_id=user_id)
 
     await state.set_state(AdvertisementEditingState.start)
-    await state.update_data(realtor_id=user_id)
+
     await message.answer(
         'Выберите объявление, которое хотите изменить',
         reply_markup=callback_kb.advertisements_for_update_kb(advertisements=user_advertisements)
     )
+    await state.update_data(realtor_id=user_id, user_advertisements=user_advertisements)

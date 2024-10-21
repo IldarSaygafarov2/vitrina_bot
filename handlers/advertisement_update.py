@@ -226,6 +226,9 @@ async def update_advertisement_editing(
             advertisement_id=advertisement_id
         )
 
+        if not gallery:
+            return await call.answer('У данного объявления нет фотографий', show_alert=True)
+
         gallery_photos = [obj['photo'] for obj in gallery]
         saved_photos = save_advertisements_photos(gallery_photos, 'photos')
 
@@ -233,7 +236,9 @@ async def update_advertisement_editing(
         for saved_photo in saved_photos:
             media_group.add_photo(type='photo', media=types.FSInputFile(saved_photo))
 
-        await starter_msg.delete()
+        if starter_msg:
+            await starter_msg.delete()
+
         msg = await call.message.answer_media_group(media=media_group.build())
         await call.message.answer(
             text='Выберите номер фотографии, которую хотите изменить',
@@ -569,7 +574,6 @@ async def process_update_gallery_photo(
         message: types.Message,
         state: FSMContext
 ):
-
     state_data = await state.get_data()
     advertisement_id = state_data.get('advertisement_id')
     new_photo = message.photo[-1].file_id
