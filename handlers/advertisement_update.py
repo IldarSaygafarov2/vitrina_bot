@@ -3,6 +3,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.utils.media_group import MediaGroupBuilder
 
 from keyboards import callback as callback_kb
+from keyboards import reply
 from services.api import api_manager
 from settings import OPERATION_TYPES, REPAIR_TYPES, PROPERTY_TYPES
 from states.custom_states import AdvertisementEditingState, AdvertisementUpdatingState
@@ -10,7 +11,7 @@ from templates import advertisement_editing_texts as texts_of_update
 from utils.advertisements import (
     save_advertisements_photos,
     create_advertisement_message,
-    update_advertisement_text_field
+    update_advertisement_text_field, save_photos_from_bot
 )
 
 router = Router()
@@ -568,26 +569,28 @@ async def process_update_gallery_photo(
         message: types.Message,
         state: FSMContext
 ):
+
     state_data = await state.get_data()
-    # advertisement_id = state_data.get('advertisement_id')
-    # new_photo = message.photo[-1].file_id
-    # msg_gallery = state_data.get('msg_gallery')
-    # gallery = state_data.get('gallery')
-    # # photo_for_update = state_data.get('photo_for_update')
-    #
-    #
-    #
-    # file_names = await save_photos_from_bot(message, [new_photo])
-    #
-    # file = open(f'photos/{file_names[0]}', 'rb')
-    # res = api_manager.gallery.upload_image_to_gallery(
-    #     advertisement_id=advertisement_id,
-    #     files={'photo': file},
-    #     data={'advertisement': advertisement_id}
-    # )
-    #
-    # print(gallery)
-    # print(res)
+    advertisement_id = state_data.get('advertisement_id')
+    new_photo = message.photo[-1].file_id
+    photo_for_update = state_data.get('photo_for_update')
+    file_names = await save_photos_from_bot(message, [new_photo])
+    file = open(f'photos/{file_names[0]}', 'rb')
+    res = api_manager.gallery.update_image_gallery(
+        advertisement_id=advertisement_id,
+        gallery_id=photo_for_update[0].get('id'),
+        files={'photo': file},
+        data={'advertisement': advertisement_id}
+    )
+    await message.answer(
+        text='Фотография была успешно обновлена'
+    )
+
+    advertisement = api_manager.advertiser_service.get_one(advertisement_id)
+    await message.answer(
+        text=create_advertisement_message(advertisement),
+        reply_markup=callback_kb.advertisement_fields_for_update_kb(advertisement_id)
+    )
 
 
 @router.message(AdvertisementUpdatingState.update_house_quadrature)
@@ -606,4 +609,33 @@ async def process_update_house_quadrature(
             'house_quadrature_from': house_quadrature_from,
             'house_quadrature_to': house_quadrature_to,
         }
+    )
+
+
+@router.callback_query(F.data == 'back_to_ads')
+async def process_back_to_ads(
+        call: types.CallbackQuery,
+        state: FSMContext
+):
+    await call.answer()
+    state_data = await state.get_data()
+    realtor_id = state_data.get('realtor_id')
+
+    user_advertisements = api_manager.user_service.get_user_advertisements(user_id=realtor_id)
+    await call.message.edit_text(
+        'Выберите объявление, которое хотите изменить',
+        reply_markup=callback_kb.advertisements_for_update_kb(advertisements=user_advertisements)
+    )
+
+
+@router.callback_query(F.data == 'home_page_realtor')
+async def home_page_realtor(
+        call: types.CallbackQuery,
+        state: FSMContext
+):
+    await call.answer()
+    await call.message.delete()
+    await call.message.answer(
+        text='Выберите действие ниже',
+        reply_markup=reply.start_kb()
     )

@@ -52,7 +52,6 @@ class AdvertisementGalleryAPIService(ApiService):
         return self.patch(endpoint, **kwargs)
 
 
-
 class AdvertisementAPIService(ApiService):
     ADVERTISEMENTS_BASE_URL: str = settings.API_URL + '/advertisements/'
     ADVERTISEMENTS_DEEP_URL: str = settings.API_URL + '/advertisements/{kwarg}/'
@@ -90,9 +89,15 @@ class UserAPIService(ApiService):
 
 
 class AdvertisementModerationAPIService(ApiService):
-    def get_realtor_advertisements(self, realtor_id: int, **kwargs) -> list:
+    def get_realtor_advertisements_for_moderation(self, realtor_id: int, **kwargs) -> list:
         url = f'{settings.API_URL}/users/{realtor_id}/moderation_advertisements/'
         return self.get(url, **kwargs)
+
+    def update_moderation_rejection_reason(
+            self, realtor_id: int, moderation_id: int, data, **kwargs
+    ) -> dict:
+        url = f'{settings.API_URL}/users/{realtor_id}/moderation_advertisements/{moderation_id}/'
+        return self.patch(url, data, **kwargs)
 
 
 class APIManager(ApiService):

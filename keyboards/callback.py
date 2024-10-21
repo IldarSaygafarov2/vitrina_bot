@@ -98,7 +98,7 @@ def advertisements_for_update_kb(advertisements: list):
         )
     kb.adjust(1)
     kb.row(
-        InlineKeyboardButton(text='На главную', callback_data='realtor_start_menu')
+        InlineKeyboardButton(text='На главную', callback_data='home_page_realtor')
     )
     return kb.as_markup()
 

@@ -189,6 +189,17 @@ async def process_unchecked_ad(
 ):
     state_data = await state.get_data()
 
+    realtor_id = state_data['realtor_data']['realtor_id']
+    advertisement_id = state_data['advertisement']['id']
+
+    moderation_advertisements = api_manager.moderation.get_realtor_advertisements_for_moderation(realtor_id=realtor_id)
+    moderation_object = list(filter(lambda obj: obj['advertisement'] == advertisement_id, moderation_advertisements))[0]
+    updated = api_manager.moderation.update_moderation_rejection_reason(
+        realtor_id=realtor_id,
+        moderation_id=moderation_object['pk'],
+        data={'rejection_reason': message.text}
+    )
+    await message.answer('Успешно отправлено')
+    await message.answer('Выберите действие ниже', reply_markup=callback.group_director_kb())
 
 
-    print(state_data)
