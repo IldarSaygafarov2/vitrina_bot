@@ -486,9 +486,16 @@ async def show_rejection_reason(
     realtor_id, advertisement_id = int(realtor_id), int(advertisement_id)
 
     moderation_objects = api_manager.moderation.get_realtor_advertisements_for_moderation(realtor_id)
-
     moderation_objects_for_advertisements = list(filter(lambda obj: obj['advertisement'] == advertisement_id,
                                                         moderation_objects))
+    if not moderation_objects_for_advertisements:
+        await call.message.edit_text(
+            text='Причины отказа еще не добавлены для этого объявления',
+        )
+        return await call.message.edit_text(
+            text='Выберите действие ниже',
+            reply_markup=callback_kb.advertisements_of_realtor_kb(realtor_id)
+        )
 
     advertisement_rejections = "Причины отказа:\n\n"
     for idx, obj in enumerate(moderation_objects_for_advertisements, start=1):
