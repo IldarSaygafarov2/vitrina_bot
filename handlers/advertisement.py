@@ -9,7 +9,7 @@ from filters.realtor import RealtorFilter
 from keyboards import callback as callback_kb
 from keyboards import reply as kb
 from services.api import api_manager
-from settings import  REPAIR_TYPES_REVERSED, PROPERTY_TYPES_REVERSED
+from settings import REPAIR_TYPES_REVERSED, PROPERTY_TYPES_REVERSED
 from states.custom_states import AdvertisementState, AdvertisementEditingState
 from templates import advertisements_texts as adv_texts
 from utils.advertisements import save_photos_from_bot
@@ -20,6 +20,12 @@ router = Router(name='advertisement')
 @router.message(CommandStart(), RealtorFilter())
 async def cmd_start(message: types.Message):
     fullname = message.from_user.full_name
+    user_id = api_manager.user_service.get_user_id(tg_username=message.from_user.username).get('id')
+    res = api_manager.user_service.update_user_tg_user_id(
+        user_id=user_id,
+        data={'tg_user_id': message.from_user.id}
+    )
+    print(res)
     await message.answer(
         text=adv_texts.realtor_welcome_text(fullname),
         reply_markup=kb.start_kb()
@@ -423,6 +429,76 @@ async def process_realtor_advertisements(
 
     await message.answer(
         'Выберите объявление, которое хотите изменить',
-        reply_markup=callback_kb.advertisements_for_update_kb(advertisements=user_advertisements)
+        reply_markup=callback_kb.advertisements_of_realtor_kb(user_id)
+        # reply_markup=callback_kb.advertisements_for_update_kb(advertisements=user_advertisements)
     )
     await state.update_data(realtor_id=user_id, user_advertisements=user_advertisements)
+
+
+@router.callback_query(F.data.startswith('moderation_completed_advertisements'))
+async def show_moderation_completed_advertisements(
+        call: types.CallbackQuery,
+        state: FSMContext
+):
+    state_data = await state.get_data()
+    realtor_id = state_data.get('realtor_id')
+    realtor_all_advertisements = api_manager.user_service.get_user_advertisements(user_id=realtor_id,
+                                                                                  params={'is_moderated': True})
+    if not realtor_all_advertisements:
+        return await call.answer('Нет проверенных объявлений', show_alert=True)
+
+    moderation_completed_advertisements = list(filter(lambda adv: adv['is_moderated'], realtor_all_advertisements))
+    if not moderation_completed_advertisements:
+        return await call.answer('Нет проверенных объявлений', show_alert=True)
+
+    await call.message.edit_text(
+        text='Выберите объявление',
+        reply_markup=callback_kb.advertisements_for_update_kb(advertisements=moderation_completed_advertisements)
+    )
+
+
+@router.callback_query(F.data.startswith('moderation_failed_advertisements'))
+async def show_moderation_failed_advertisements(
+        call: types.CallbackQuery,
+        state: FSMContext
+):
+    state_data = await state.get_data()
+    realtor_id = state_data.get('realtor_id')
+    realtor_moderation_failed_advertisements = api_manager.user_service.get_user_advertisements(
+        user_id=realtor_id,
+        params={'is_moderated': False}
+    )
+    if not realtor_moderation_failed_advertisements:
+        return await call.answer('Все объявления прошли проверку', show_alert=True)
+
+    await call.message.edit_text(
+        text='Выберите объявление, непрошедшее модерацию, чтобы узнать причину',
+        reply_markup=callback_kb.advertisements_rejection_reasons_kb(realtor_moderation_failed_advertisements)
+    )
+
+
+@router.callback_query(F.data.startswith('rejection_reason'))
+async def show_rejection_reason(
+        call: types.CallbackQuery,
+        state: FSMContext
+):
+    _, realtor_id, advertisement_id = call.data.split(':')
+    realtor_id, advertisement_id = int(realtor_id), int(advertisement_id)
+
+    moderation_objects = api_manager.moderation.get_realtor_advertisements_for_moderation(realtor_id)
+
+    moderation_objects_for_advertisements = list(filter(lambda obj: obj['advertisement'] == advertisement_id,
+                                                        moderation_objects))
+
+    advertisement_rejections = "Причины отказа:\n\n"
+    for idx, obj in enumerate(moderation_objects_for_advertisements, start=1):
+        advertisement_rejections += f"{idx}. {obj['rejection_reason']}\n"
+
+    await call.message.edit_text(
+        text=advertisement_rejections,
+    )
+    await call.message.answer(
+        text='Выберите действие ниже',
+        reply_markup=callback_kb.advertisements_of_realtor_kb(realtor_id)
+
+    )

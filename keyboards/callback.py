@@ -59,6 +59,7 @@ def ads_moderation_kb():
     return kb.as_markup()
 
 
+
 def realtor_advertisements_kb(ads_list: list, checked: bool):
     kb = InlineKeyboardBuilder()
     for idx, ad in enumerate(ads_list, start=1):
@@ -109,7 +110,7 @@ def advertisement_fields_for_update_kb(adv_id: int):
         kb.button(text=field, callback_data=f'field_update:{adv_id}:{call}')
     kb.adjust(2)
     kb.row(
-        InlineKeyboardButton(text='Назад', callback_data='back_to_ads')
+        InlineKeyboardButton(text='На главную', callback_data='home_page_realtor')
     )
     return kb.as_markup()
 
@@ -153,4 +154,28 @@ def gallery_update_kb(gallery: list[dict[str, str | int]], callback_data_for_ret
     kb.adjust(2)
     if callback_data_for_return is not None:
         kb.row(InlineKeyboardButton(text='Назад', callback_data=callback_data_for_return))
+    return kb.as_markup()
+
+
+def advertisements_of_realtor_kb(realtor_id: int):
+    kb = InlineKeyboardBuilder()
+    kb.button(text='Прошедшие модерацию', callback_data=f'moderation_completed_advertisements:{realtor_id}')
+    kb.button(text='Непрошедшие модерацию', callback_data=f'moderation_failed_advertisements:{realtor_id}')
+    kb.button(text='Все объявления', callback_data=f'all_advertisements:{realtor_id}')
+    kb.adjust(2)
+    kb.row(InlineKeyboardButton(text='На главную', callback_data='home_page_realtor'))
+    return kb.as_markup()
+
+
+def advertisements_rejection_reasons_kb(
+        advertisements: list[dict]
+):
+    kb = InlineKeyboardBuilder()
+    for idx, advertisement in enumerate(advertisements, start=1):
+        kb.button(
+            text=f'{idx}. {advertisement["name"]}',
+            callback_data=f'rejection_reason:{advertisement["user"]["id"]}:{advertisement["id"]}'
+        )
+    kb.row(InlineKeyboardButton(text='На главную', callback_data='home_page_realtor'))
+    kb.adjust(1)
     return kb.as_markup()

@@ -87,6 +87,10 @@ class UserAPIService(ApiService):
         endpoint = f'{settings.API_URL}/users/{user_id}/advertisements/'
         return self.get(endpoint, **kwargs)
 
+    def update_user_tg_user_id(self, user_id: int, data, **kwargs):
+        endpoint = f'{settings.API_URL}/users/{user_id}/'
+        return self.patch(endpoint, data, **kwargs)
+
 
 class AdvertisementModerationAPIService(ApiService):
     def get_realtor_advertisements_for_moderation(self, realtor_id: int, **kwargs) -> list:
@@ -100,6 +104,12 @@ class AdvertisementModerationAPIService(ApiService):
         return self.patch(url, data, **kwargs)
 
 
+class UserTypeService(ApiService):
+    def get_all_users_by_user_type(self, user_type: str, **kwargs) -> list:
+        endpoint = f'{settings.API_URL}/users/'
+        return self.get(endpoint, params={'user_type': user_type}, **kwargs)
+
+
 class APIManager(ApiService):
     def __init__(self):
         self.category_service: CategoryAPIService = CategoryAPIService()
@@ -108,6 +118,7 @@ class APIManager(ApiService):
         self.user_service: UserAPIService = UserAPIService()
         self.moderation: AdvertisementModerationAPIService = AdvertisementModerationAPIService()
         self.gallery: AdvertisementGalleryAPIService = AdvertisementGalleryAPIService()
+        self.user_type: UserTypeService = UserTypeService()
 
 
 api_manager = APIManager()
