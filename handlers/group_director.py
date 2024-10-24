@@ -41,7 +41,8 @@ async def show_realtors_menu(
         call: types.CallbackQuery
 ):
     await call.answer()
-    realtors = api_manager.user_service.get_all_users(params={'user_type': 'realtor'})
+    realtors = api_manager.user_service.get_all_users(
+        params={'user_type': 'realtor'})
     await call.message.edit_text(
         text=rg_list_text(),
         reply_markup=callback.realtors_kb(realtors)
@@ -76,13 +77,15 @@ async def show_checked_ads_menu(
 
     params = {'is_moderated': True, 'user': realtor_data['realtor_id']}
 
-    checked_ads = api_manager.advertiser_service.get_all(params=params).get('results')
+    checked_ads = api_manager.advertiser_service.get_all(
+        params=params).get('results')
 
     if not checked_ads:
         return await call.answer(no_checked_advertisements_alert(), show_alert=True)
     await call.message.edit_text(
         text=rg_checked_advertisements_text(),
-        reply_markup=callback.realtor_advertisements_kb(checked_ads, checked=True)
+        reply_markup=callback.realtor_advertisements_kb(
+            checked_ads, checked=True)
     )
 
 
@@ -94,12 +97,14 @@ async def show_unchecked_ads_menu(
     data = await state.get_data()
     realtor_data = data.get('realtor_data')
     params = {'is_moderated': False, 'user': realtor_data['realtor_id']}
-    checked_ads = api_manager.advertiser_service.get_all(params=params).get('results')
+    checked_ads = api_manager.advertiser_service.get_all(
+        params=params).get('results')
     if not checked_ads:
         return await call.answer(no_unchecked_advertisements_alert(), show_alert=True)
     await call.message.edit_text(
         text=rg_checked_advertisements_text(),
-        reply_markup=callback.realtor_advertisements_kb(checked_ads, checked=False)
+        reply_markup=callback.realtor_advertisements_kb(
+            checked_ads, checked=False)
     )
 
 
@@ -111,9 +116,11 @@ async def show_unchecked_ads(
     await call.answer()
     adv_id = int(call.data.split(':')[-1])
 
-    advertisement = api_manager.advertiser_service.get_one(advertisement_id=adv_id)
+    advertisement = api_manager.advertiser_service.get_one(
+        advertisement_id=adv_id)
 
-    advertisement_photos = [obj.get('photo') for obj in advertisement.get('gallery')]
+    advertisement_photos = [obj.get('photo')
+                            for obj in advertisement.get('gallery')]
 
     save_advertisements_photos(
         photos=advertisement_photos,
@@ -138,9 +145,11 @@ async def show_checked_ads(
     await call.answer()
     adv_id = int(call.data.split(':')[-1])
 
-    advertisement = api_manager.advertiser_service.get_one(advertisement_id=adv_id)
+    advertisement = api_manager.advertiser_service.get_one(
+        advertisement_id=adv_id)
 
-    advertisement_photos = [obj.get('photo') for obj in advertisement.get('gallery')]
+    advertisement_photos = [obj.get('photo')
+                            for obj in advertisement.get('gallery')]
 
     await state.update_data(advertisement=advertisement)
     await call.message.edit_text(
@@ -159,7 +168,8 @@ async def confirm_advertisement_moderation(
         state: FSMContext
 ):
     adv_id = int(call.data.split("_")[1])
-    api_manager.advertiser_service.update_advertisement(adv_id, data={'is_moderated': True})
+    api_manager.advertiser_service.update_advertisement(
+        adv_id, data={'is_moderated': True})
     await call.answer(rg_advertisement_moderation_complete_text(), show_alert=True)
     await call.message.edit_text(
         text=rg_welcome_text(),
@@ -178,7 +188,8 @@ async def decline_advertisement_moderation(
 
     await call.message.edit_text(
         text=rg_advertisement_decline_reason_text(),
-        reply_markup=callback.return_to_ads_kb('unchecked_ads', adv_id, show_checks=False)
+        reply_markup=callback.return_to_ads_kb(
+            'unchecked_ads', adv_id, show_checks=False)
     )
 
 
@@ -190,16 +201,24 @@ async def process_unchecked_ad(
     state_data = await state.get_data()
 
     realtor_id = state_data['realtor_data']['realtor_id']
+    realtor_obj = api_manager.user_service.get_user(user_id=realtor_id)
+
     advertisement_id = state_data['advertisement']['id']
 
-    moderation_advertisements = api_manager.moderation.get_realtor_advertisements_for_moderation(realtor_id=realtor_id)
-    moderation_object = list(filter(lambda obj: obj['advertisement'] == advertisement_id, moderation_advertisements))[0]
+    moderation_advertisements = api_manager.moderation.get_realtor_advertisements_for_moderation(
+        realtor_id=realtor_id)
+    moderation_object = list(filter(
+        lambda obj: obj['advertisement'] == advertisement_id, moderation_advertisements))[0]
     updated = api_manager.moderation.update_moderation_rejection_reason(
         realtor_id=realtor_id,
         moderation_id=moderation_object['pk'],
         data={'rejection_reason': message.text}
     )
+    if realtor_obj.get('tg_user_id'):
+        await message.bot.send_message(
+            chat_id=realtor_obj.get('tg_user_id'),
+            text='Вам пришло уведомление о вашем объявлении'
+        )
+
     await message.answer('Успешно отправлено')
     await message.answer('Выберите действие ниже', reply_markup=callback.group_director_kb())
-
-

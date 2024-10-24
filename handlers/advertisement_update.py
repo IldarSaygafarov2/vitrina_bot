@@ -204,7 +204,7 @@ async def update_advertisement_editing(
                 is_studio=advertisement['is_studio']),
             reply_markup=callback_kb.advertisement_is_studio_kb(
                 callback_data_for_return=f'advertisement_update:{
-                advertisement_id}',
+                    advertisement_id}',
             )
         )
         await state.update_data(update_is_studio_msg=msg, advertisement_id=advertisement_id)
@@ -215,7 +215,8 @@ async def update_advertisement_editing(
                 house_quadrature_from=advertisement['house_quadrature_from'],
                 house_quadrature_to=advertisement['house_quadrature_to'],
             ),
-            reply_markup=callback_kb.return_back_kb(f'advertisement_update:{advertisement_id}')
+            reply_markup=callback_kb.return_back_kb(
+                f'advertisement_update:{advertisement_id}')
         )
         await state.update_data(update_house_quadrature_msg=msg, advertisement_id=advertisement_id)
         await state.set_state(AdvertisementUpdatingState.update_house_quadrature)
@@ -232,9 +233,11 @@ async def update_advertisement_editing(
         gallery_photos = [obj['photo'] for obj in gallery]
         saved_photos = save_advertisements_photos(gallery_photos, 'photos')
 
-        media_group = MediaGroupBuilder(caption='Фотографии данного объявления')
+        media_group = MediaGroupBuilder(
+            caption='Фотографии данного объявления')
         for saved_photo in saved_photos:
-            media_group.add_photo(type='photo', media=types.FSInputFile(saved_photo))
+            media_group.add_photo(
+                type='photo', media=types.FSInputFile(saved_photo))
 
         if starter_msg:
             await starter_msg.delete()
@@ -244,7 +247,8 @@ async def update_advertisement_editing(
             text='Выберите номер фотографии, которую хотите изменить',
             reply_markup=callback_kb.gallery_update_kb(
                 gallery=gallery,
-                callback_data_for_return=f'advertisement_update:{advertisement_id}'
+                callback_data_for_return=f'advertisement_update:{
+                    advertisement_id}'
             )
         )
 
@@ -290,7 +294,7 @@ async def process_update_operation_type(
 
     await msg.edit_text(
         text=f'Тип операции успешно обовлен\n'
-             f'Новое значение: <b>{operation_type_text}</b>',
+        f'Новое значение: <b>{operation_type_text}</b>',
         reply_markup=callback_kb.return_back_kb(
             f'advertisement_update:{advertisement_id}')
     )
@@ -515,7 +519,8 @@ async def process_update_property_type(
     await msg.edit_text(
         text='Данные успешно обновлены!\n\n'
              f'Новое значение: <b><i>{PROPERTY_TYPES[property_type]}</i></b>',
-        reply_markup=callback_kb.return_back_kb(f'advertisement_update:{advertisement_id}')
+        reply_markup=callback_kb.return_back_kb(
+            f'advertisement_update:{advertisement_id}')
     )
     state_data.pop('update_property_type_msg')
 
@@ -541,7 +546,8 @@ async def process_update_is_studio(
     await msg.edit_text(
         text='Данные успешно изменены!!\n\n'
              f'Новое значение: <b><i>{text}</i></b>',
-        reply_markup=callback_kb.return_back_kb(f'advertisement_update:{advertisement_id}')
+        reply_markup=callback_kb.return_back_kb(
+            f'advertisement_update:{advertisement_id}')
     )
     state_data.pop('update_is_studio_msg')
 
@@ -559,10 +565,12 @@ async def process_update_gallery(
 
     _, gallery_photo_id = call.data.split(':')
 
-    photo_for_update = [obj for obj in gallery if obj['id'] == int(gallery_photo_id)]
+    photo_for_update = [
+        obj for obj in gallery if obj['id'] == int(gallery_photo_id)]
     msg_gallery = await call.message.edit_text(
         text='Отправьте новую фотографию',
-        reply_markup=callback_kb.return_back_kb(f'advertisement_update:{advertisement_id}')
+        reply_markup=callback_kb.return_back_kb(
+            f'advertisement_update:{advertisement_id}')
     )
 
     await state.update_data(msg_gallery=msg_gallery, photo_for_update=photo_for_update)
@@ -593,7 +601,8 @@ async def process_update_gallery_photo(
     advertisement = api_manager.advertiser_service.get_one(advertisement_id)
     await message.answer(
         text=create_advertisement_message(advertisement),
-        reply_markup=callback_kb.advertisement_fields_for_update_kb(advertisement_id)
+        reply_markup=callback_kb.advertisement_fields_for_update_kb(
+            advertisement_id)
     )
 
 
@@ -625,10 +634,12 @@ async def process_back_to_ads(
     state_data = await state.get_data()
     realtor_id = state_data.get('realtor_id')
 
-    user_advertisements = api_manager.user_service.get_user_advertisements(user_id=realtor_id)
+    user_advertisements = api_manager.user_service.get_user_advertisements(
+        user_id=realtor_id)
     await call.message.edit_text(
         'Выберите объявление, которое хотите изменить',
-        reply_markup=callback_kb.advertisements_for_update_kb(advertisements=user_advertisements)
+        reply_markup=callback_kb.advertisements_for_update_kb(
+            advertisements=user_advertisements)
     )
 
 
