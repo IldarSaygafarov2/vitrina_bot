@@ -7,7 +7,8 @@ load_dotenv()
 
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 
-API_URL = 'http://127.0.0.1:8000/api/v1'
+API_URL = os.getenv('API_URL')
+WEB_APP_URL = os.getenv('WEB_APP_URL')
 
 BASE_DIR = Path(__file__).resolve().parent
 KB_FIELDS = [
