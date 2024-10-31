@@ -1,0 +1,15 @@
+[Unit]
+Description=Бот витрины недвижимости
+After=syslog.target
+After=network.target
+
+[Service]
+Type=simple
+User=ildar
+WorkingDirectory=/home/ildar/projects/vitrina_bot
+ExecStart=/home/ildar/projects/vitrina_bot/venv/bin/python3 /home/ildar/projects/vitrina_bot/bot.py
+RestartSec=10
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
