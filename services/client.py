@@ -1,7 +1,10 @@
 import requests
 from services.api import api_manager
 
-print(api_manager.advertiser_service.get_one(advertisement_id=1, headers={'Accept-Language': 'uz'}))
-
-
-
+# print(api_manager.advertiser_service.update_advertisement(
+#     advertisement_id=13,
+#     data={
+#         'name': 'Vitrina Bot',
+#     },
+#     headers={'Accept-Language': 'uz'}
+# ))

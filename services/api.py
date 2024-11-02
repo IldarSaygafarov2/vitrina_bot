@@ -7,7 +7,7 @@ class ApiService:
     @staticmethod
     def get(url: str, **kwargs):
         response = requests.get(url, **kwargs)
-        response.raise_for_status()
+        # response.raise_for_status()
         return response.json()
 
     @staticmethod

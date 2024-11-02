@@ -94,6 +94,16 @@ async def process_photos(message: types.Message, state: FSMContext):
 @router.message(AdvertisementState.title)
 async def process_title(message: types.Message, state: FSMContext):
     await state.update_data(title=message.text)
+    # await state.set_state(AdvertisementState.full_description)
+    await state.set_state(AdvertisementState.title_uz)
+    await message.answer(
+        text='Напишите заголовок объявления на узбекском языке'
+    )
+
+
+@router.message(AdvertisementState.title_uz)
+async def process_title_uz(message: types.Message, state: FSMContext):
+    await state.update_data(title_uz=message.text)
     await state.set_state(AdvertisementState.full_description)
     await message.answer(
         text=adv_texts.realtor_description_text()
@@ -102,8 +112,17 @@ async def process_title(message: types.Message, state: FSMContext):
 
 @router.message(AdvertisementState.full_description)
 async def process_description(message: types.Message, state: FSMContext):
-    districts = api_manager.district_service.get_districts()
     await state.update_data(full_description=message.text)
+    await state.set_state(AdvertisementState.full_description_uz)
+    await message.answer(
+        text='Напишите описание для объявления на узбекском языке',
+    )
+
+
+@router.message(AdvertisementState.full_description_uz)
+async def process_description_uz(message: types.Message, state: FSMContext):
+    districts = api_manager.district_service.get_districts()
+    await state.update_data(full_description_uz=message.text)
     await state.set_state(AdvertisementState.district)
     await message.answer(
         text=adv_texts.realtor_choose_district_text(),
@@ -161,6 +180,15 @@ async def process_house_quadrature_to(message: types.Message, state: FSMContext)
 @router.message(AdvertisementState.address)
 async def process_address(message: types.Message, state: FSMContext):
     await state.update_data(address=message.text)
+    await state.set_state(AdvertisementState.address_uz)
+    await message.answer(
+        text='Напишите адрес объявления на узбекском языке',
+    )
+
+
+@router.message(AdvertisementState.address_uz)
+async def process_address_uz(message: types.Message, state: FSMContext):
+    await state.update_data(address_uz=message.text)
     await state.set_state(AdvertisementState.property_type)
     await message.answer(
         text=adv_texts.realtor_property_type_text(),
@@ -306,11 +334,19 @@ async def process_floor(message: types.Message, state: FSMContext):
 @router.message(AdvertisementState.repair_type)
 async def process_repair(message: types.Message, state: FSMContext):
     data = await state.get_data()
+
     title = data.get('title')
+    description = data.get('full_description')
+    address = data.get('address')
+
+    address_uz = data.get('address_uz')
+    title_uz = data.get('title_uz')
+    description_uz = data.get('full_description_uz')
+
     is_allowed = data.get('auction_allowed')
     property_category = data.get('property_category')
     operation_type = data.get('operation_type')
-    description = data.get('full_description')
+
     district = data.get('district')
     property_type = data.get('property_type')
     price = data.get('price')
@@ -323,7 +359,7 @@ async def process_repair(message: types.Message, state: FSMContext):
     repair_type = message.text
     is_studio = data.get('is_studio')
     creation_date = data.get('creation_date')
-    address = data.get('address')
+
     house_quadrature_from = data.get('house_quadrature_from')
     house_quadrature_to = data.get('house_quadrature_to')
 
@@ -365,9 +401,13 @@ async def process_repair(message: types.Message, state: FSMContext):
     new = api_manager.advertiser_service.create_advertisement(
         data={
             "name": title,
+            "name_uz": title_uz,
+
             "description": description,
+            "description_uz": description_uz,
             "district": district['id'],
             "address": address,
+            "address_uz": address_uz,
             "property_type": property_type_choice,
             "price": price,
             "rooms_qty_from": rooms_from,
@@ -385,10 +425,22 @@ async def process_repair(message: types.Message, state: FSMContext):
             'user': user_id['id'],
         },
     )
-    print(new)
+
+    upd = api_manager.advertiser_service.update_advertisement(
+        advertisement_id=new['id'],
+        data={
+            'name': title_uz,
+            'description': description_uz,
+            'address': address_uz,
+        },
+        headers={
+            'Accept-Language': 'uz',
+        }
+    )
+
+    print(upd)
 
     media_files = os.listdir('photos')
-    print(media_files)
     for media_file in media_files:
         if media_file not in file_names:
             continue
@@ -418,7 +470,6 @@ async def process_realtor_advertisements(
         message: types.Message,
         state: FSMContext
 ):
-
     username = message.from_user.username
     user_id = api_manager.user_service.get_user_id(
         tg_username=username

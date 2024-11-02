@@ -36,6 +36,11 @@ OPERATION_TYPES = {
     'buy': 'Покупка'
 }
 
+OPERATION_TYPES_UZ = {
+    'rent': 'Ijara',
+    'buy': 'Sotib olish'
+}
+
 ADVERTISEMENT_RANGE_FIELDS = {
     'quadrature_from': 'Квадратура от',
     'quadrature_to': 'Квадратура до',
@@ -53,12 +58,24 @@ REPAIR_TYPES = {
     "pre_finished": "Предчистовая",
 }
 
-REPAIR_TYPES_REVERSED = {value: key for key, value in REPAIR_TYPES.items()}
+REPAIR_TYPES_UZ = {
+    "with": "Yangilangan",
+    "without": "Ta'mirsiz",
+    "designed": "Dizayner ta'mirlash",
+    "rough": "Qoralama",
+    "pre_finished": "Oldindan tugatish",
+}
 
+REPAIR_TYPES_REVERSED = {value: key for key, value in REPAIR_TYPES.items()}
 
 PROPERTY_TYPES = {
     'new': 'Новостройка',
     'old': 'Вторичный фонд'
+}
+
+PROPERTY_TYPES_UZ = {
+    'new': 'Yangi bino',
+    'old': 'Ikkilamchi fond'
 }
 
 PROPERTY_TYPES_REVERSED = {value: key for key, value in PROPERTY_TYPES.items()}

@@ -4,9 +4,12 @@ from aiogram.fsm.state import State, StatesGroup
 class AdvertisementState(StatesGroup):
     operation_type = State()
     property_category = State()
+    property_type = State()
+    repair_type = State()
 
     photos = State()
     photos_number = State()
+
     title = State()
     title_uz = State()
 
@@ -19,20 +22,23 @@ class AdvertisementState(StatesGroup):
     address = State()
     address_uz = State()
 
-    property_type = State()
     price = State()
     auction_allowed = State()
+
     rooms_from = State()
     rooms_to = State()
+
     quadrature_from = State()
     quadrature_to = State()
+
     floor_from = State()
     floor_to = State()
-    repair_type = State()
-    is_studio = State()
-    creation_date = State()
+
     house_quadrature_from = State()
     house_quadrature_to = State()
+
+    is_studio = State()
+    creation_date = State()
 
 
 class RGProcessState(StatesGroup):
