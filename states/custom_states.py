@@ -8,9 +8,17 @@ class AdvertisementState(StatesGroup):
     photos = State()
     photos_number = State()
     title = State()
+    title_uz = State()
+
     full_description = State()
+    full_description_uz = State()
+
     district = State()
+    district_uz = State()
+
     address = State()
+    address_uz = State()
+
     property_type = State()
     price = State()
     auction_allowed = State()

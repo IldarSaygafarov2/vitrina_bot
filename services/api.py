@@ -40,25 +40,21 @@ class DistrictAPIService(ApiService):
 
 class AdvertisementGalleryAPIService(ApiService):
     def get_advertisement_gallery(self, advertisement_id: int, **kwargs):
-        endpoint = f'{
-            settings.API_URL}/advertisements/{advertisement_id}/gallery/'
+        endpoint = f'{settings.API_URL}/advertisements/{advertisement_id}/gallery/'
         return self.get(endpoint, **kwargs)
 
     def upload_image_to_gallery(self, advertisement_id: int, **kwargs):
-        endpoint = f'{
-            settings.API_URL}/advertisements/{advertisement_id}/gallery/'
+        endpoint = f'{settings.API_URL}/advertisements/{advertisement_id}/gallery/'
         return self.post(endpoint, **kwargs)
 
     def update_image_gallery(self, advertisement_id: int, gallery_id: int, **kwargs):
-        endpoint = f'{
-            settings.API_URL}/advertisements/{advertisement_id}/gallery/{gallery_id}/'
+        endpoint = f'{settings.API_URL}/advertisements/{advertisement_id}/gallery/{gallery_id}/'
         return self.patch(endpoint, **kwargs)
 
 
 class AdvertisementAPIService(ApiService):
     ADVERTISEMENTS_BASE_URL: str = settings.API_URL + '/advertisements/'
-    ADVERTISEMENTS_DEEP_URL: str = settings.API_URL + \
-        '/advertisements/{kwarg}/'
+    ADVERTISEMENTS_DEEP_URL: str = settings.API_URL + '/advertisements/{kwarg}/'
 
     def create_advertisement(self, **kwargs):
         return self.post(self.ADVERTISEMENTS_BASE_URL, **kwargs)
@@ -108,8 +104,7 @@ class AdvertisementModerationAPIService(ApiService):
     def update_moderation_rejection_reason(
             self, realtor_id: int, moderation_id: int, data, **kwargs
     ) -> dict:
-        url = f'{
-            settings.API_URL}/users/{realtor_id}/moderation_advertisements/{moderation_id}/'
+        url = f'{settings.API_URL}/users/{realtor_id}/moderation_advertisements/{moderation_id}/'
         return self.patch(url, data, **kwargs)
 
 

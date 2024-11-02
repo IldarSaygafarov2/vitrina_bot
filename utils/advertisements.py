@@ -5,11 +5,9 @@ import requests
 from aiogram import html
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
-
 from keyboards.callback import return_back_kb
 from services.api import api_manager
 from settings import BASE_DIR, OPERATION_TYPES
-
 
 
 def create_advertisement_message(item: dict) -> str:
@@ -31,11 +29,9 @@ def create_advertisement_message(item: dict) -> str:
     floor_to = item.get('floor_to')
     repair_type = item.get('repair_type')
 
-    t = f'{html.bold('Кол-во комнат: ')}от {html.italic(rooms_qty_from)
-    } до {html.italic(rooms_qty_to)}'
-    t2 = f'\n{html.bold("Год постройки: ")}{html.italic(
-        creation_year)}' if creation_year else ''
-    #
+    t = f"{html.bold('Кол-во комнат: ')}от {html.italic(rooms_qty_from)} до {html.italic(rooms_qty_to)}"
+    t2 = f'\n{html.bold("Год постройки: ")}{html.italic(creation_year)}' if creation_year else ''
+
     return f'''
 {html.bold('Заголовок: ')}
 {html.italic(name)}
@@ -125,6 +121,9 @@ async def save_photos_from_bot(
         message,
         photos_list
 ):
+    is_media_files_exists = os.path.exists('photos')
+    if not is_media_files_exists:
+        os.makedirs('photos')
     file_names = []
     for photo in photos_list:
         file = await message.bot.get_file(photo)

@@ -4,7 +4,6 @@ from aiogram import Router, types, F
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InputMediaPhoto
-
 from filters.realtor import RealtorFilter
 from keyboards import callback as callback_kb
 from keyboards import reply as kb
@@ -387,7 +386,9 @@ async def process_repair(message: types.Message, state: FSMContext):
         },
     )
     print(new)
+
     media_files = os.listdir('photos')
+    print(media_files)
     for media_file in media_files:
         if media_file not in file_names:
             continue

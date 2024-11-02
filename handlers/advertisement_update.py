@@ -203,8 +203,7 @@ async def update_advertisement_editing(
             text=texts_of_update.update_is_studio_text(
                 is_studio=advertisement['is_studio']),
             reply_markup=callback_kb.advertisement_is_studio_kb(
-                callback_data_for_return=f'advertisement_update:{
-                    advertisement_id}',
+                callback_data_for_return=f'advertisement_update:{advertisement_id}',
             )
         )
         await state.update_data(update_is_studio_msg=msg, advertisement_id=advertisement_id)
@@ -247,8 +246,7 @@ async def update_advertisement_editing(
             text='Выберите номер фотографии, которую хотите изменить',
             reply_markup=callback_kb.gallery_update_kb(
                 gallery=gallery,
-                callback_data_for_return=f'advertisement_update:{
-                    advertisement_id}'
+                callback_data_for_return=f'advertisement_update:{advertisement_id}'
             )
         )
 
