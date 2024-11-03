@@ -8,7 +8,7 @@ from filters.realtor import RealtorFilter
 from keyboards import callback as callback_kb
 from keyboards import reply as kb
 from services.api import api_manager
-from settings import REPAIR_TYPES_REVERSED, PROPERTY_TYPES_REVERSED
+from settings import REPAIR_TYPES_REVERSED, PROPERTY_TYPES_REVERSED, PROPERTY_TYPES_UZ, REPAIR_TYPES_UZ
 from states.custom_states import AdvertisementState, AdvertisementEditingState
 from templates import advertisements_texts as adv_texts
 from utils.advertisements import save_photos_from_bot
@@ -57,8 +57,9 @@ async def process_photos_qty(callback: types.CallbackQuery, state: FSMContext):
 
     _, category_slug = callback.data.split(':')
     category = api_manager.category_service.get_category(category_slug)
+    category_uz = api_manager.category_service.get_category(category_slug, headers={'Accept-Language': 'uz'})
 
-    await state.update_data(property_category=category)
+    await state.update_data(property_category=category, property_category_uz=category_uz)
     await state.set_state(AdvertisementState.photos_number)
     await callback.message.answer(
         text=adv_texts.realtor_selected_property_category_text(
@@ -138,8 +139,9 @@ async def process_district(callback: types.CallbackQuery, state: FSMContext):
 
     _, district_slug = callback.data.split('_')
     district = api_manager.district_service.get_district(district_slug)
+    district_uz = api_manager.district_service.get_district(district_slug, headers={'Accept-Language': 'uz'})
 
-    await state.update_data(district=district)
+    await state.update_data(district=district, district_uz=district_uz)
     await callback.message.answer(
         text=adv_texts.realtor_chosen_district_text(
             district=district.get('name')
@@ -345,10 +347,19 @@ async def process_repair(message: types.Message, state: FSMContext):
 
     is_allowed = data.get('auction_allowed')
     property_category = data.get('property_category')
+    property_category_uz = data.get('property_category_uz')
     operation_type = data.get('operation_type')
 
     district = data.get('district')
+    district_uz = data.get('district_uz')
+
     property_type = data.get('property_type')
+    property_type_uz_value, property_type_uz_key  = PROPERTY_TYPES_UZ[property_type]
+    print(property_type_uz_value, property_type_uz_key)
+
+    repair_type = message.text
+    repair_type_uz = REPAIR_TYPES_UZ[repair_type]
+
     price = data.get('price')
     rooms_from = data.get('rooms_from', 0)
     rooms_to = data.get('rooms_to', 0)
@@ -356,7 +367,7 @@ async def process_repair(message: types.Message, state: FSMContext):
     quadrature_to = data.get('quadrature_to')
     floor_from = data.get('floor_from')
     floor_to = data.get('floor_to')
-    repair_type = message.text
+
     is_studio = data.get('is_studio')
     creation_date = data.get('creation_date')
 
@@ -401,13 +412,9 @@ async def process_repair(message: types.Message, state: FSMContext):
     new = api_manager.advertiser_service.create_advertisement(
         data={
             "name": title,
-            "name_uz": title_uz,
-
             "description": description,
-            "description_uz": description_uz,
             "district": district['id'],
             "address": address,
-            "address_uz": address_uz,
             "property_type": property_type_choice,
             "price": price,
             "rooms_qty_from": rooms_from,
@@ -426,12 +433,22 @@ async def process_repair(message: types.Message, state: FSMContext):
         },
     )
 
+    print(title_uz,
+          description_uz,
+          address_uz,
+          district_uz,
+          repair_type_uz)
+
     upd = api_manager.advertiser_service.update_advertisement(
         advertisement_id=new['id'],
         data={
             'name': title_uz,
             'description': description_uz,
             'address': address_uz,
+            'district': district_uz['id'],
+            'category': property_category_uz['id'],
+            'property_type_uz': property_type_uz_value,
+            # 'repair_type': repair_type_uz,
         },
         headers={
             'Accept-Language': 'uz',

@@ -26,16 +26,16 @@ class CategoryAPIService(ApiService):
     def get_categories(self) -> list:
         return self.get(settings.API_URL + '/categories/')
 
-    def get_category(self, category_slug: str) -> dict:
-        return self.get(settings.API_URL + '/categories/' + category_slug)
+    def get_category(self, category_slug: str, **kwargs) -> dict:
+        return self.get(settings.API_URL + '/categories/' + category_slug, **kwargs)
 
 
 class DistrictAPIService(ApiService):
     def get_districts(self):
         return self.get(settings.API_URL + '/districts/')
 
-    def get_district(self, district_slug: str) -> int:
-        return self.get(settings.API_URL + '/districts/' + district_slug)
+    def get_district(self, district_slug: str, **kwargs) -> int:
+        return self.get(settings.API_URL + '/districts/' + district_slug, **kwargs)
 
 
 class AdvertisementGalleryAPIService(ApiService):
