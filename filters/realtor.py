@@ -9,6 +9,7 @@ class RealtorFilter(Filter):
 
     async def __call__(self, message: Message, *args, **kwargs):
         user_type = api_manager.user_service.get_user_type(message.from_user.username)
+        user_type = user_type.get('user_type', False)
         if user_type == 'No User matches the given query.':
             return False
-        return user_type['user_type'] == self.type
+        return user_type == self.type

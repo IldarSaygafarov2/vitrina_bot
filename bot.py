@@ -23,7 +23,7 @@ async def main():
 if __name__ == '__main__':
     formatter = '[%(asctime)s] %(levelname)8s --- %(message)s (%(filename)s:%(lineno)s)'
     logging.basicConfig(
-        filename=f'bot-from-{datetime.now().date()}.log',
+        filename=f'logs/bot-from-{datetime.now().date()}.log',
         filemode='w',
         format=formatter,
         datefmt='%Y-%m-%d %H:%M:%S',
