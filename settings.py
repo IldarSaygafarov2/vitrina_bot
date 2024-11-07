@@ -75,6 +75,6 @@ PROPERTY_TYPES = {
 PROPERTY_TYPES_REVERSED = {value: key for key, value in PROPERTY_TYPES.items()}
 
 PROPERTY_TYPES_UZ = {
-    'Новостройка': ('Yangi bino', 'new'),
-    'Вторичный фонд': ('Ikkilamchi fond', 'old')
+    'Новостройка': ('Yangi uylar', 'new'),
+    'Вторичный фонд': ('Xonadonlar', 'old')
 }

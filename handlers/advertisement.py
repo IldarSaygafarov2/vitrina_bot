@@ -354,8 +354,7 @@ async def process_repair(message: types.Message, state: FSMContext):
     district_uz = data.get('district_uz')
 
     property_type = data.get('property_type')
-    property_type_uz_value, property_type_uz_key  = PROPERTY_TYPES_UZ[property_type]
-    print(property_type_uz_value, property_type_uz_key)
+    property_type_uz_value, property_type_uz_key = PROPERTY_TYPES_UZ[property_type]
 
     repair_type = message.text
     repair_type_uz = REPAIR_TYPES_UZ[repair_type]
@@ -448,7 +447,6 @@ async def process_repair(message: types.Message, state: FSMContext):
             'district': district_uz['id'],
             'category': property_category_uz['id'],
             'property_type_uz': property_type_uz_value,
-            # 'repair_type': repair_type_uz,
         },
         headers={
             'Accept-Language': 'uz',
@@ -555,14 +553,13 @@ async def show_rejection_reason(
     realtor_id, advertisement_id = int(realtor_id), int(advertisement_id)
 
     moderation_objects = api_manager.moderation.get_realtor_advertisements_for_moderation(realtor_id)
-    moderation_objects_for_advertisements = list(filter(lambda obj: obj['advertisement'] == advertisement_id,
+    moderation_objects_for_advertisements = list(filter(lambda obj: obj['advertisement'] == advertisement_id
+                                                                    and obj['rejection_reason'] is not None,
                                                         moderation_objects))
+    print(moderation_objects_for_advertisements)
     if not moderation_objects_for_advertisements:
-        await call.message.edit_text(
-            text='Причины отказа еще не добавлены для этого объявления',
-        )
         return await call.message.edit_text(
-            text='Выберите действие ниже',
+            text='Причины отказа еще не добавлены для этого объявления\n\nВыберите действие ниже',
             reply_markup=callback_kb.advertisements_of_realtor_kb(realtor_id)
         )
 
