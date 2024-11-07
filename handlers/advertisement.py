@@ -497,7 +497,7 @@ async def process_realtor_advertisements(
     await state.set_state(AdvertisementEditingState.start)
 
     await message.answer(
-        'Выберите объявление, которое хотите изменить',
+        'Выберите действие ниже',
         reply_markup=callback_kb.advertisements_of_realtor_kb(user_id)
         # reply_markup=callback_kb.advertisements_for_update_kb(advertisements=user_advertisements)
     )
@@ -577,4 +577,23 @@ async def show_rejection_reason(
         text='Выберите действие ниже',
         reply_markup=callback_kb.advertisements_of_realtor_kb(realtor_id)
 
+    )
+
+
+@router.callback_query(F.data.startswith('all_advertisements'))
+async def show_realtor_all_advertisements(
+        call: types.CallbackQuery,
+        state: FSMContext
+):
+    await call.answer()
+    _, realtor_id = call.data.split(':')
+    realtor_all_advertisements = api_manager.user_service.get_user_advertisements(
+        user_id=realtor_id,
+    )
+    if not realtor_all_advertisements:
+        await call.answer('Вы еще не добавили объявления', show_alert=True)
+
+    await call.message.edit_text(
+        text='Выберите объявление',
+        reply_markup=callback_kb.advertisements_for_update_kb(advertisements=realtor_all_advertisements)
     )
