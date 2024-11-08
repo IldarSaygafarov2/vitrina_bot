@@ -577,13 +577,12 @@ async def show_realtor_all_advertisements(
         call: types.CallbackQuery,
         state: FSMContext
 ):
-    await call.answer()
     _, realtor_id = call.data.split(':')
     realtor_all_advertisements = api_manager.user_service.get_user_advertisements(
         user_id=realtor_id,
     )
     if not realtor_all_advertisements:
-        await call.answer('Вы еще не добавили объявления', show_alert=True)
+        return await call.answer('Вы еще не добавили объявления', show_alert=True)
 
     await call.message.edit_text(
         text='Выберите объявление',
