@@ -4,6 +4,7 @@ from aiogram import Router, types, F
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InputMediaPhoto
+
 from filters.realtor import RealtorFilter
 from keyboards import callback as callback_kb
 from keyboards import reply as kb
@@ -95,7 +96,6 @@ async def process_photos(message: types.Message, state: FSMContext):
 @router.message(AdvertisementState.title)
 async def process_title(message: types.Message, state: FSMContext):
     await state.update_data(title=message.text)
-    # await state.set_state(AdvertisementState.full_description)
     await state.set_state(AdvertisementState.title_uz)
     await message.answer(
         text='Напишите заголовок объявления на узбекском языке'
@@ -432,12 +432,6 @@ async def process_repair(message: types.Message, state: FSMContext):
         },
     )
 
-    print(title_uz,
-          description_uz,
-          address_uz,
-          district_uz,
-          repair_type_uz)
-
     upd = api_manager.advertiser_service.update_advertisement(
         advertisement_id=new['id'],
         data={
@@ -452,8 +446,6 @@ async def process_repair(message: types.Message, state: FSMContext):
             'Accept-Language': 'uz',
         }
     )
-
-    print(upd)
 
     media_files = os.listdir('photos')
     for media_file in media_files:
@@ -497,7 +489,6 @@ async def process_realtor_advertisements(
     await message.answer(
         'Выберите действие ниже',
         reply_markup=callback_kb.advertisements_of_realtor_kb(user_id)
-        # reply_markup=callback_kb.advertisements_for_update_kb(advertisements=user_advertisements)
     )
     await state.update_data(realtor_id=user_id, user_advertisements=user_advertisements)
 
@@ -556,7 +547,6 @@ async def show_rejection_reason(
     moderation_objects_for_advertisements = list(filter(lambda obj: obj['advertisement'] == advertisement_id
                                                                     and obj['rejection_reason'] is not None,
                                                         moderation_objects))
-    print(moderation_objects_for_advertisements)
     if not moderation_objects_for_advertisements:
         return await call.message.edit_text(
             text='Причины отказа еще не добавлены для этого объявления\n\nВыберите действие ниже',
