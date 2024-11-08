@@ -431,21 +431,26 @@ async def process_repair(message: types.Message, state: FSMContext):
             'user': user_id['id'],
         },
     )
+    print(new)
 
-    upd = api_manager.advertiser_service.update_advertisement(
-        advertisement_id=new['id'],
-        data={
-            'name': title_uz,
-            'description': description_uz,
-            'address': address_uz,
-            'district': district_uz['id'],
-            'category': property_category_uz['id'],
-            'property_type_uz': property_type_uz_value,
-        },
-        headers={
-            'Accept-Language': 'uz',
-        }
-    )
+    try:
+        api_manager.advertiser_service.update_advertisement(
+            advertisement_id=new['id'],
+            data={
+                'name': title_uz,
+                'description': description_uz,
+                'address': address_uz,
+                'district': district_uz['id'],
+                'category': property_category_uz['id'],
+                'property_type': property_type_uz_value,
+            },
+            headers={
+                'Accept-Language': 'uz',
+            }
+        )
+    except Exception as e:
+        print(e, e.__class__)
+
 
     media_files = os.listdir('photos')
     for media_file in media_files:
