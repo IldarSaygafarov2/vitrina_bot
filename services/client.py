@@ -2,7 +2,7 @@ import requests
 from services.api import api_manager
 
 print(api_manager.advertiser_service.get_one(
-    advertisement_id=19,
+    advertisement_id=34,
     # data={
     #     'name': 'Vitrina Bot',
     # },

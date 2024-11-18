@@ -9,7 +9,11 @@ from filters.realtor import RealtorFilter
 from keyboards import callback as callback_kb
 from keyboards import reply as kb
 from services.api import api_manager
-from settings import REPAIR_TYPES_REVERSED, PROPERTY_TYPES_REVERSED, PROPERTY_TYPES_UZ, REPAIR_TYPES_UZ
+from settings import (
+    REPAIR_TYPES_REVERSED,
+    PROPERTY_TYPES_REVERSED,
+    OPERATION_TYPES_REVERSED
+)
 from states.custom_states import AdvertisementState, AdvertisementEditingState
 from templates import advertisements_texts as adv_texts
 from utils.advertisements import save_photos_from_bot
@@ -354,10 +358,8 @@ async def process_repair(message: types.Message, state: FSMContext):
     district_uz = data.get('district_uz')
 
     property_type = data.get('property_type')
-    property_type_uz_value, property_type_uz_key = PROPERTY_TYPES_UZ[property_type]
 
     repair_type = message.text
-    repair_type_uz = REPAIR_TYPES_UZ[repair_type]
 
     price = data.get('price')
     rooms_from = data.get('rooms_from', 0)
@@ -373,13 +375,16 @@ async def process_repair(message: types.Message, state: FSMContext):
     house_quadrature_from = data.get('house_quadrature_from')
     house_quadrature_to = data.get('house_quadrature_to')
 
-    repair_type_choice = REPAIR_TYPES_REVERSED[repair_type]
-    property_type_choice = PROPERTY_TYPES_REVERSED[property_type]
+
 
     username = message.from_user.username
     user_id = api_manager.user_service.get_user_id(username)
 
     file_names = await save_photos_from_bot(message, data['photos'])
+
+    operation_type_key = OPERATION_TYPES_REVERSED[operation_type]
+    property_type_key = PROPERTY_TYPES_REVERSED[property_type]
+    repair_type_key = REPAIR_TYPES_REVERSED[repair_type]
 
     msg = adv_texts.realtor_advertisement_completed_text(
         title=title,
@@ -413,8 +418,11 @@ async def process_repair(message: types.Message, state: FSMContext):
             "name": title,
             "description": description,
             "district": district['id'],
+            'operation_type': operation_type_key,
+            'operation_type_uz': operation_type_key,
             "address": address,
-            "property_type": property_type_choice,
+            "property_type": property_type_key,
+            "property_type_uz": property_type_key,
             "price": price,
             "rooms_qty_from": rooms_from,
             "rooms_qty_to": rooms_to,
@@ -424,7 +432,8 @@ async def process_repair(message: types.Message, state: FSMContext):
             "floor_to": floor_to,
             "auction_allowed": is_allowed,
             "category": property_category['id'],
-            'repair_type': repair_type_choice,
+            'repair_type': repair_type_key,
+            'repair_type_uz': repair_type_key,
             'house_quadrature_from': house_quadrature_from,
             'house_quadrature_to': house_quadrature_to,
             'is_studio': is_studio,
@@ -442,7 +451,6 @@ async def process_repair(message: types.Message, state: FSMContext):
                 'address': address_uz,
                 'district': district_uz['id'],
                 'category': property_category_uz['id'],
-                'property_type': property_type_uz_value,
             },
             headers={
                 'Accept-Language': 'uz',
